@@ -2,95 +2,112 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <title>منصة المشاعر المقدسة - عرض ثلاثي الأبعاد</title>
+  <title>منصة المشاعر المقدسة - العالم الافتراضي</title>
   
   <!-- مكتبة A-Frame الأساسية -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <!-- مكتبة Orbit Controls للكاميرا المدارية -->
   <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
-  <!-- مكتبة Look-at لجعل النقاط تواجه الكاميرا دائماً -->
   <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
   <style>
     * { box-sizing: border-box; }
     body, html {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #02040a; /* لون داكن جداً للخلفية قبل التحميل */
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #000; /* خلفية سوداء */
     }
     
-    #vr-container {
-      position: absolute; top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      border: none; overflow: hidden;
-      background: #02040a;
-    }
+    #vr-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; }
 
-    /* الشعارات */
+    /* الشعارات المحولة للأبيض والمصغرة */
     .logos-wrapper {
       position: absolute; top: 20px; left: 0; right: 0;
-      display: flex; justify-content: space-between; padding: 0 30px;
+      display: flex; justify-content: space-between; padding: 0 40px;
       z-index: 100; pointer-events: none; 
     }
-    .logos-wrapper img { height: 75px; object-fit: contain; pointer-events: auto; drop-shadow: 0 0 10px rgba(0,150,255,0.5); }
+    .logos-wrapper img { 
+      height: 45px; /* تصغير الشعارات */
+      object-fit: contain; pointer-events: auto; 
+      filter: brightness(0) invert(1); /* تحويل الشعار إلى أبيض بالكامل */
+      opacity: 0.8;
+    }
     
     /* لوحة التحكم السفلية */
     .control-panel { position: absolute; bottom: 30px; right: 30px; z-index: 100; }
     .btn-primary {
-      background: rgba(0, 136, 255, 0.2); color: #00aaff; border: 1px solid #00aaff;
-      padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; 
+      background: rgba(0, 136, 255, 0.1); color: #00aaff; border: 1px solid #00aaff;
+      padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;
       transition: 0.3s; backdrop-filter: blur(5px);
     }
-    .btn-primary:hover { background: rgba(0, 136, 255, 0.4); box-shadow: 0 0 15px rgba(0,136,255,0.5); }
+    .btn-primary:hover { background: rgba(0, 136, 255, 0.3); }
     .btn-primary.active { background: #00aaff; color: #000; }
     
-    /* نافذة الإحداثيات */
+    /* نافذة استخراج الأكواد */
     #coord-logger {
-      position: absolute; top: 110px; right: 30px; z-index: 100;
+      position: absolute; top: 90px; right: 30px; z-index: 100;
       background: rgba(10, 15, 25, 0.95); padding: 15px; border-radius: 8px;
       display: none; color: #00aaff; direction: ltr; border: 1px solid #00aaff;
-      font-family: monospace; max-width: 450px; word-wrap: break-word;
-      box-shadow: 0 0 20px rgba(0,136,255,0.2);
+      font-family: monospace; max-width: 450px; font-size: 13px;
     }
 
-    /* لوحة المعلومات (الإطار الأسود الشفاف) */
-    #info-panel {
-      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-      width: 90%; max-width: 650px;
-      background: rgba(5, 10, 15, 0.95); color: #fff;
-      padding: 24px; border-radius: 12px; z-index: 100;
-      display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-      border: 1px solid rgba(0, 136, 255, 0.3);
-      backdrop-filter: blur(10px);
+    /* ----------------------------------------- */
+    /* تصميم النافذة المنبثقة (Pop-up) مع الخط الأبيض */
+    /* ----------------------------------------- */
+    #pop-up-container {
+      position: absolute; display: none; z-index: 100;
+      pointer-events: none; /* لتجنب التداخل مع الماوس إلا إذا كانت مفتوحة */
     }
-    .close-btn {
-      position: absolute; top: 15px; left: 20px;
-      background: none; border: none; color: #00aaff; font-size: 24px;
-      cursor: pointer; transition: 0.2s;
-    }
-    .close-btn:hover { color: #fff; text-shadow: 0 0 10px #00aaff; }
-    #panel-title { margin: 0 0 10px 0; color: #00aaff; font-size: 22px; border-bottom: 1px solid rgba(0,136,255,0.2); padding-bottom: 10px;}
-    #panel-desc { line-height: 1.7; font-size: 15px; margin-bottom: 15px; color: #ddd;}
     
-    /* معرض الصور الجانبي */
-    .gallery-container {
-      display: flex; gap: 10px; overflow-x: auto;
-      padding: 10px 0; border-radius: 8px;
+    /* الخط الأبيض المتوهج */
+    .connecting-line {
+      position: absolute; left: 50%; bottom: 0;
+      width: 2px; height: 100px;
+      background: linear-gradient(to top, transparent, #fff);
+      box-shadow: 0 0 10px #fff;
+      transform-origin: bottom center;
+      animation: growLine 0.5s ease-out forwards;
     }
-    .gallery-container img {
-      height: 90px; border-radius: 6px; border: 1px solid #00aaff;
-      object-fit: cover; cursor: pointer; transition: 0.2s;
+    @keyframes growLine {
+      from { height: 0; opacity: 0; }
+      to { height: 100px; opacity: 1; }
     }
-    .gallery-container img:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,136,255,0.5); }
+
+    /* صندوق المعلومات نفسه */
+    .pop-up-box {
+      position: absolute; left: 50%; bottom: 100px; /* يرتفع فوق الخط */
+      transform: translateX(-50%);
+      width: 320px;
+      background: rgba(0, 0, 0, 0.85); color: #fff;
+      padding: 20px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 0 30px rgba(0,136,255,0.2);
+      backdrop-filter: blur(10px);
+      pointer-events: auto; /* السماح بالنقر داخل اللوحة */
+      opacity: 0;
+      animation: fadeInBox 0.3s ease-out 0.4s forwards; /* يظهر بعد الخط */
+    }
+    @keyframes fadeInBox {
+      from { opacity: 0; transform: translate(-50%, 10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    .close-pop-btn {
+      position: absolute; top: 10px; right: 15px;
+      background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer;
+    }
+    .close-pop-btn:hover { color: #fff; }
+    #pop-title { margin: 0 0 8px 0; color: #00aaff; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;}
+    #pop-desc { line-height: 1.5; font-size: 13px; color: #ddd; margin-bottom: 10px;}
+    
+    .pop-gallery { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
+    .pop-gallery img { height: 60px; border-radius: 4px; border: 1px solid #555; object-fit: cover; }
   </style>
 
   <script>
     let isEditMode = false;
-    let pointCounter = 2; // لبدء الترقيم التلقائي للنقاط الجديدة
+    let pointCounter = 1;
 
-    // أداة استخراج الإحداثيات وإنشاء النقاط
+    // سكربت استخراج الإحداثيات
     AFRAME.registerComponent('hotspot-creator', {
       init: function () {
         this.el.addEventListener('click', (e) => {
@@ -99,78 +116,78 @@
           let p = e.detail.intersection.point;
           let coords = `${p.x.toFixed(2)} ${p.y.toFixed(2)} ${p.z.toFixed(2)}`;
           
-          // رسم نقطة مسطحة مؤقتة لتأكيد مكان النقر
           let marker = document.createElement('a-entity');
           marker.setAttribute('position', coords);
           marker.setAttribute('look-at', '[camera]');
-          marker.innerHTML = `
-            <a-circle radius="0.5" color="#000" material="opacity: 0.8"></a-circle>
-            <a-ring radius-inner="0.45" radius-outer="0.5" color="#00aaff"></a-ring>
-            <a-text value="${pointCounter}" align="center" color="#00aaff" width="5" position="0 0 0.05"></a-text>
-          `;
+          marker.innerHTML = `<a-circle radius="0.4" color="#000" material="opacity: 0.8"></a-circle>
+                              <a-ring radius-inner="0.38" radius-outer="0.4" color="#00aaff"></a-ring>
+                              <a-text value="${pointCounter}" align="center" color="#fff" width="4" position="0 0 0.05"></a-text>`;
           this.el.sceneEl.appendChild(marker);
 
-          // إظهار الكود الجاهز للنسخ
           let logger = document.getElementById('coord-logger');
           logger.style.display = 'block';
           logger.innerHTML = `<strong style="color:white;">كود النقطة رقم (${pointCounter}) - انسخه:</strong><br><br>
             <span style="color:#00aaff;">&lt;a-entity</span> <span style="color:#ddd;">class="clickable" position="${coords}" look-at="[camera]"<br>
-            hotspot-action="title: عنوان المكان; desc: الوصف هنا; images: link.jpg"&gt;</span><br>
+            hotspot-action="title: عنوان; desc: وصف; images: link1.jpg"&gt;</span><br>
             &nbsp;&nbsp;&lt;a-circle radius="0.4" color="#000" material="opacity: 0.8"&gt;&lt;/a-circle&gt;<br>
             &nbsp;&nbsp;&lt;a-ring radius-inner="0.38" radius-outer="0.4" color="#00aaff"&gt;&lt;/a-ring&gt;<br>
             &nbsp;&nbsp;&lt;a-text value="${pointCounter}" align="center" color="#fff" width="4" position="0 0 0.05"&gt;&lt;/a-text&gt;<br>
             <span style="color:#00aaff;">&lt;/a-entity&gt;</span>`;
-            
           pointCounter++;
         });
       }
     });
 
-    // أكشن التفاعل مع النقاط
+    // أكشن التفاعل مع النقاط لإظهار الـ Pop-up
     AFRAME.registerComponent('hotspot-action', {
-      schema: {
-        title: {type: 'string'},
-        desc: {type: 'string'},
-        audio: {type: 'string', default: ''},
-        images: {type: 'string', default: ''} 
-      },
+      schema: { title: {type: 'string'}, desc: {type: 'string'}, images: {type: 'string', default: ''} },
       init: function () {
-        // إضافة تأثير التحويم (Hover Effect)
-        this.el.addEventListener('mouseenter', () => {
-          if (!isEditMode) this.el.setAttribute('scale', '1.2 1.2 1.2');
-        });
-        this.el.addEventListener('mouseleave', () => {
-          if (!isEditMode) this.el.setAttribute('scale', '1 1 1');
-        });
+        // إضافة تأثير تكبير خفيف عند مرور الماوس
+        this.el.addEventListener('mouseenter', () => { if (!isEditMode) this.el.setAttribute('scale', '1.2 1.2 1.2'); });
+        this.el.addEventListener('mouseleave', () => { if (!isEditMode) this.el.setAttribute('scale', '1 1 1'); });
 
         this.el.addEventListener('click', (e) => {
           if (isEditMode) return; 
           
           let data = this.data;
           
-          // إيقاف الصوتيات
-          document.querySelectorAll('.voiceover').forEach(audio => { 
-            audio.pause(); audio.currentTime = 0; 
-          });
+          // 1. تحويل الإحداثيات الـ 3D إلى إحداثيات شاشة 2D لوضع الـ Pop-up في نفس مكان النقطة
+          let pos3D = new THREE.Vector3();
+          this.el.object3D.getWorldPosition(pos3D);
+          let camera = this.el.sceneEl.camera;
+          pos3D.project(camera);
           
-          if (data.audio) {
-            let audioEl = document.querySelector(data.audio);
-            if (audioEl) audioEl.play().catch(e => console.log('Audio error:', e));
-          }
+          let widthHalf = window.innerWidth / 2;
+          let heightHalf = window.innerHeight / 2;
+          
+          let posX = (pos3D.x * widthHalf) + widthHalf;
+          let posY = - (pos3D.y * heightHalf) + heightHalf;
 
-          // تعبئة البيانات
-          document.getElementById('panel-title').innerText = data.title;
-          document.getElementById('panel-desc').innerText = data.desc;
+          // 2. تعبئة البيانات في اللوحة
+          document.getElementById('pop-title').innerText = data.title;
+          document.getElementById('pop-desc').innerText = data.desc;
           
-          // تعبئة الصور
           let galleryHtml = '';
           if (data.images.trim() !== '') {
             data.images.split(',').forEach(img => {
               if(img.trim()) galleryHtml += `<img src="${img.trim()}" alt="صورة للموقع">`;
             });
           }
-          document.getElementById('gallery-container').innerHTML = galleryHtml;
-          document.getElementById('info-panel').style.display = 'block';
+          document.getElementById('pop-gallery').innerHTML = galleryHtml;
+
+          // 3. تحريك اللوحة وإظهارها
+          let popUp = document.getElementById('pop-up-container');
+          // إزالة الأنيميشن القديم وإعادة تركيبه ليعمل مرة أخرى
+          let box = popUp.querySelector('.pop-up-box');
+          let line = popUp.querySelector('.connecting-line');
+          box.style.animation = 'none'; line.style.animation = 'none';
+          box.offsetHeight; /* trigger reflow */
+          box.style.animation = 'fadeInBox 0.3s ease-out 0.4s forwards';
+          line.style.animation = 'growLine 0.5s ease-out forwards';
+
+          popUp.style.left = posX + 'px';
+          popUp.style.top = posY + 'px';
+          popUp.style.display = 'block';
         });
       }
     });
@@ -179,20 +196,16 @@
       isEditMode = !isEditMode;
       let btn = document.getElementById('edit-mode-btn');
       let logger = document.getElementById('coord-logger');
-      
       if(isEditMode) {
-        btn.classList.add('active');
-        btn.innerText = "إنهاء التحرير";
+        btn.classList.add('active'); btn.innerText = "إنهاء التحرير";
       } else {
-        btn.classList.remove('active');
-        btn.innerText = "تفعيل إضافة النقاط (Edit Mode)";
+        btn.classList.remove('active'); btn.innerText = "تفعيل الإضافة والتعديل";
         logger.style.display = 'none';
       }
     }
     
-    function closePanel() {
-      document.getElementById('info-panel').style.display = 'none';
-      document.querySelectorAll('.voiceover').forEach(a => { a.pause(); a.currentTime = 0; });
+    function closePopUp() {
+      document.getElementById('pop-up-container').style.display = 'none';
     }
   </script>
 </head>
@@ -200,75 +213,76 @@
 
   <div id="vr-container">
     
-    <!-- الشعارات المعتمدة -->
+    <!-- الشعارات -->
     <div class="logos-wrapper">
       <img src="https://haj.gov.sa/_next/image?url=https%3A%2F%2Fhaj.gov.sa%2Fs-core%2F-%2Fmedia%2FProject%2FHAJJ%2FHajj-Logos%2FHeader-Logo.svg%3Fiar%3D0%26hash%3DEA30CCD6D55090BA41D3BA548A24E24A&amp;w=256&amp;q=75" alt="وزارة الحج والعمرة">
       <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
     </div>
 
-    <!-- أزرار الإضافة -->
+    <!-- التحكم -->
     <div class="control-panel">
-      <button id="edit-mode-btn" class="btn-primary" onclick="toggleEditMode()">تفعيل إضافة النقاط (Edit Mode)</button>
+      <button id="edit-mode-btn" class="btn-primary" onclick="toggleEditMode()">تفعيل الإضافة والتعديل</button>
     </div>
     <div id="coord-logger"></div>
 
-    <!-- لوحة المعلومات -->
-    <div id="info-panel">
-      <button class="close-btn" onclick="closePanel()">✖</button>
-      <h2 id="panel-title">--</h2>
-      <p id="panel-desc">--</p>
-      <div id="gallery-container" class="gallery-container"></div>
+    <!-- نافذة الـ Pop-up التي تخرج بخط من النقطة -->
+    <div id="pop-up-container">
+      <div class="connecting-line"></div>
+      <div class="pop-up-box">
+        <button class="close-pop-btn" onclick="closePopUp()">✖</button>
+        <h2 id="pop-title">--</h2>
+        <p id="pop-desc">--</p>
+        <div id="pop-gallery" class="pop-gallery"></div>
+      </div>
     </div>
 
     <!-- المشهد -->
-    <a-scene embedded cursor="rayOrigin: mouse" raycaster="objects: .clickable, .model-surface" hotspot-creator fog="type: exponential; color: #02040a; density: 0.015">
+    <!-- تم إضافة تأثير ضباب خفيف (fog) ليعطي عمق تقني للشبكة -->
+    <a-scene embedded cursor="rayOrigin: mouse" raycaster="objects: .clickable, .model-surface" hotspot-creator fog="type: exponential; color: #000; density: 0.02">
       
-      <a-assets timeout="15000">
+      <a-assets timeout="10000">
         <!-- 
-          تنبيه هااااااام: 
-          يرجى تعديل الأسماء هنا لتطابق أسماء الملفات التي قمت برفعها على جيت هب بالضبط! 
-          إذا كان اسم الملف المرفوع Masjed Albiaa.glb قم بتبديله هنا بدلاً من KHIMAA.glb
+          تأكد من تعديل الأسماء هنا لتطابق ملفاتك المرفوعة بالضبط 
         -->
-        <a-asset-item id="model-1" src="jamaraat.glb"></a-asset-item>
-        <a-asset-item id="model-2" src="KHIMAA.glb"></a-asset-item>
+        <a-asset-item id="model-jamarat" src="models/jamaraat.glb"></a-asset-item>
+        <a-asset-item id="model-khimaa" src="models/KHIMAA.glb"></a-asset-item>
       </a-assets>
 
-      <!-- سماء سوداء داكنة جداً -->
-      <a-sky color="#02040a"></a-sky>
+      <!-- سماء سوداء -->
+      <a-sky color="#000"></a-sky>
 
-      <!-- إضاءة استوديو سينمائية تبرز المجسمات في الظلام -->
-      <a-light type="ambient" color="#2a3b4c" intensity="0.8"></a-light>
-      <a-light type="directional" color="#ffffff" intensity="0.6" position="1 2 1"></a-light>
-      <a-light type="point" color="#00aaff" intensity="0.5" position="0 10 0" distance="50"></a-light>
+      <!-- إضاءة استوديو تقنية ساطعة -->
+      <a-light type="ambient" color="#fff" intensity="0.9"></a-light>
+      <a-light type="directional" color="#00aaff" intensity="0.5" position="-1 2 1"></a-light>
+      <a-light type="directional" color="#fff" intensity="0.3" position="1 2 -1"></a-light>
 
-      <!-- الأرضية السوداء -->
-      <a-plane position="0 -0.1 0" rotation="-90 0 0" width="200" height="200" color="#05070a"></a-plane>
-      
-      <!-- الشبكة الزرقاء المضيئة (Blue Neon Grid) التي طلبتها -->
+      <!-- أرضية شفافة باللون الأسود وفوقها شبكة زرقاء نيون (Wireframe Grid) -->
+      <a-plane position="0 -0.1 0" rotation="-90 0 0" width="200" height="200" color="#050505"></a-plane>
       <a-plane position="0 0 0" rotation="-90 0 0" width="200" height="200" 
-               material="color: #00aaff; wireframe: true; transparent: true; opacity: 0.15">
-      </a-plane>
-
-      <!-- الموديلات المرفوعة -->
-      <a-entity class="model-surface">
-        <a-gltf-model src="#model-1" position="0 0 -10"></a-gltf-model>
-        <a-gltf-model src="#model-2" position="20 0 -10"></a-gltf-model>
-      </a-entity>
+               material="color: #00aaff; wireframe: true; transparent: true; opacity: 0.15"></a-plane>
 
       <!-- 
-        نقطة تفاعلية رقم (1) - تم تغييرها من كرة إلى (أيقونة مسطحة برقم) تلتف لمواجهة الكاميرا 
-        هذا هو الشكل الاحترافي المطابق لنظام Sketchfab 
+        حل مشكلة الأحجام المتفاوتة (Scale)
+        - إذا كان الموديل كبيراً جداً، اجعل الـ scale مثلا "0.01 0.01 0.01" أو "0.1 0.1 0.1"
+        - إذا كان صغيراً جداً، اجعله "10 10 10" أو "50 50 50"
+        الآن قمت بوضع الموديلات بعيدة عن بعضها بمسافات مناسبة
       -->
-      <a-entity class="clickable" position="0 5 -10" look-at="[camera]"
-                hotspot-action="title: الجمرات; desc: مجمع معماري لتسهيل انسيابية الحجاج.; images: ">
+      <a-entity class="model-surface">
+        <a-gltf-model src="#model-jamarat" position="-20 0 -20" scale="1 1 1"></a-gltf-model>
+        <a-gltf-model src="#model-khimaa" position="20 0 -20" scale="1 1 1"></a-gltf-model>
+      </a-entity>
+
+      <!-- النقطة التفاعلية المسطحة (نظام Sketchfab) -->
+      <a-entity class="clickable" position="-20 5 -20" look-at="[camera]"
+                hotspot-action="title: منشأة الجمرات; desc: مجمع معماري متعدد الطوابق صُمم لتسهيل انسيابية حركة الحجاج بأمان أثناء أداء شعيرة رمي الجمرات.; images: ">
         <a-circle radius="0.4" color="#000" material="opacity: 0.8"></a-circle>
         <a-ring radius-inner="0.38" radius-outer="0.4" color="#00aaff"></a-ring>
         <a-text value="1" align="center" color="#fff" width="4" position="0 0 0.05"></a-text>
       </a-entity>
 
-      <!-- الكاميرا المدارية (Orbit Controls) -->
+      <!-- الكاميرا المدارية -->
       <a-entity camera look-controls="enabled: false" 
-                orbit-controls="target: 0 0 -10; minDistance: 5; maxDistance: 150; initialPosition: 0 20 20; enablePan: true; enableZoom: true;">
+                orbit-controls="target: 0 0 -20; minDistance: 5; maxDistance: 150; initialPosition: 0 30 40; enablePan: true; enableZoom: true;">
       </a-entity>
       
     </a-scene>
