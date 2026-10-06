@@ -11,7 +11,8 @@
     body, html {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #02050a; /* لون السماء الأساسي */
+      /* خلفية متدرجة ناعمة تتماشى مع الإضاءة العلوية */
+      background: radial-gradient(circle at top, #06193b 0%, #010308 80%);
     }
 
     #vr-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -24,59 +25,73 @@
     }
     .logos-wrapper img { 
       height: 35px; object-fit: contain; pointer-events: auto;
-      filter: brightness(0) invert(1); opacity: 0.9;
+      filter: brightness(0) invert(1); opacity: 0.85;
     }
 
-    /* أسهم التنقل (Slider) السفلية */
+    /* أسهم التنقل السفلية - تم تصحيح الاتجاهات برمجياً */
     .nav-arrows-container {
-      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 60px; z-index: 100; pointer-events: none;
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 80px; z-index: 100; pointer-events: none;
     }
     .nav-arrow {
       pointer-events: auto;
-      width: 55px; height: 55px; border-radius: 50%;
-      background: rgba(4, 10, 20, 0.7); 
-      border: 1px solid rgba(0, 150, 255, 0.4);
-      color: #00d2ff; font-size: 24px; font-weight: bold;
+      width: 50px; height: 50px; border-radius: 50%;
+      background: rgba(6, 12, 24, 0.4); 
+      border: 1px solid rgba(0, 150, 255, 0.3);
+      color: #00d2ff; font-size: 22px; font-weight: bold;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.3s; backdrop-filter: blur(8px);
-      box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
+      cursor: pointer; transition: 0.3s; backdrop-filter: blur(5px);
+      box-shadow: 0 0 10px rgba(0, 150, 255, 0.1);
     }
     .nav-arrow:hover { 
       background: rgba(0, 150, 255, 0.2); 
-      box-shadow: 0 0 25px rgba(0, 150, 255, 0.6); 
-      transform: scale(1.1); color: #fff; border-color: #00d2ff;
+      box-shadow: 0 0 20px rgba(0, 150, 255, 0.5); 
+      transform: scale(1.05); color: #fff; border-color: #00d2ff;
     }
 
-    /* نافذة البوب-أب */
+    /* 
+      تصميم البوب-أب الجانبي (Glassmorphism 3D effect) 
+      تم إزالة position الثابت لجعله يتمركز جانبياً بناءً على الكود
+    */
     #info-panel {
-      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-      width: 85%; max-width: 450px;
-      background: rgba(6, 12, 24, 0.85); color: #fff;
-      padding: 25px; border-radius: 16px; z-index: 100; display: none; 
-      box-shadow: 0 0 40px rgba(0, 100, 255, 0.3), inset 0 0 20px rgba(0, 150, 255, 0.1);
-      border: 1px solid rgba(0, 150, 255, 0.4); backdrop-filter: blur(10px);
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 380px; /* عرض مناسب للعرض الجانبي */
+      background: rgba(10, 18, 35, 0.65); color: #fff;
+      padding: 25px; border-radius: 20px; z-index: 100; display: none; 
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 150, 255, 0.15) inset;
+      border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      transition: left 0.4s ease, right 0.4s ease; /* لحركة سلسة عند تغيير الاتجاه */
     }
     .close-btn {
-      position: absolute; top: 10px; left: 15px; background: none; border: none; 
-      color: #00aaff; font-size: 24px; cursor: pointer; transition: 0.3s;
+      position: absolute; top: 12px; left: 15px; background: none; border: none; 
+      color: rgba(255,255,255,0.5); font-size: 20px; cursor: pointer; transition: 0.3s;
     }
     .close-btn:hover { color: #fff; transform: scale(1.1); }
     #panel-title { 
-      margin: 0 0 10px 0; color: #00d2ff; font-size: 20px; 
-      border-bottom: 1px solid rgba(0, 150, 255, 0.3); padding-bottom: 10px;
+      margin: 0 0 12px 0; color: #ffffff; font-size: 22px; font-weight: 600;
+      text-shadow: 0 2px 10px rgba(0, 150, 255, 0.4);
     }
-    #panel-desc { line-height: 1.6; font-size: 14px; margin-bottom: 15px; color: #cbd5e1; }
+    #panel-desc { 
+      line-height: 1.7; font-size: 14px; margin-bottom: 20px; color: #a0aec0; 
+    }
     
-    .gallery-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
-    .gallery-container img {
-      height: 90px; min-width: 130px; border-radius: 6px; border: 1px solid rgba(0, 150, 255, 0.3);
-      object-fit: cover;
+    /* تصميم كروت الصور بلمسة 3D */
+    .gallery-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+    .gallery-container::-webkit-scrollbar { height: 4px; }
+    .gallery-container::-webkit-scrollbar-thumb { background: rgba(0,150,255,0.3); border-radius: 4px; }
+    .gallery-card {
+      height: 90px; min-width: 140px; border-radius: 8px; 
+      border: 1px solid rgba(255,255,255,0.05); overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s;
     }
+    .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0, 150, 255, 0.2); }
   </style>
 
   <script>
-    // تصميم الشبكة الناعمة والهادئة
+    // تصميم الشبكة الناعمة جداً
     AFRAME.registerComponent('neon-grid', {
       init: function () {
         let canvas = document.createElement('canvas');
@@ -86,10 +101,9 @@
         ctx.fillStyle = 'rgba(0, 0, 0, 1)'; 
         ctx.fillRect(0, 0, 512, 512);
         
-        // خطوط رفيعة وناعمة
-        ctx.strokeStyle = 'rgba(0, 150, 255, 0.3)'; 
-        ctx.lineWidth = 1.5; 
-        ctx.shadowBlur = 8;
+        ctx.strokeStyle = 'rgba(0, 150, 255, 0.25)'; // خطوط رفيعة وناعمة
+        ctx.lineWidth = 1; 
+        ctx.shadowBlur = 5;
         ctx.shadowColor = "#00d2ff";
         ctx.strokeRect(0, 0, 512, 512);
         
@@ -99,7 +113,7 @@
         texture.repeat.set(300, 300); 
         
         let material = new THREE.MeshStandardMaterial({ 
-          map: texture, roughness: 0.6, metalness: 0.3 
+          map: texture, roughness: 0.8, metalness: 0.1 
         });
         this.el.getObject3D('mesh').material = material;
       }
@@ -112,7 +126,8 @@
         desc: 'مجمع معماري حديث مصمم لتسهيل حركة الحجاج أثناء رمي الجمرات، يظهر هنا تفصيل المسارات المتعددة.',
         images: 'https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=300',
         camTarget: {x: -15, y: 0, z: 0},
-        camPos: {x: -15, y: 12, z: 20}
+        camPos: {x: -15, y: 15, z: 25},
+        panelSide: 'right' // اللوحة تظهر يميناً
       },
       {
         id: 'khimaa',
@@ -120,73 +135,87 @@
         desc: 'مدينة الخيام المطورة، توفر إقامة آمنة ومريحة للحجاج ضمن تخطيط هندسي دقيق لمنطقة المشاعر.',
         images: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=300',
         camTarget: {x: 15, y: 0, z: 0},
-        camPos: {x: 15, y: 12, z: 20}
+        camPos: {x: 15, y: 15, z: 25},
+        panelSide: 'left' // اللوحة تظهر يساراً
       }
     ];
 
     let currentIndex = 0;
+    let isAnimating = false; // لمنع النقر المتعدد أثناء الحركة
 
     function goToNext() {
-      // الاتجاه نحو اليسار (الموديل التالي)
+      if(isAnimating) return;
+      // السهم الأيمن ينقلك للموديل التالي
       currentIndex = (currentIndex + 1) % siteData.length;
       animateCameraToCurrentModel();
     }
 
     function goToPrev() {
-      // الاتجاه نحو اليمين (الموديل السابق)
+      if(isAnimating) return;
+      // السهم الأيسر ينقلك للموديل السابق
       currentIndex = (currentIndex - 1 + siteData.length) % siteData.length;
       animateCameraToCurrentModel();
     }
 
-    // حركة الكاميرا السينمائية (Zoom Out -> Zoom In)
+    // حركة الكاميرا السينمائية (Zoom Out -> Move -> Zoom In)
     function animateCameraToCurrentModel() {
+      isAnimating = true;
       let data = siteData[currentIndex];
       let cameraEl = document.querySelector('[camera]');
       
-      closePanel(); // إغلاق النافذة أثناء الحركة
+      closePanel(); 
 
       let currentPos = cameraEl.getAttribute('position');
       
-      // حساب نقطة في المنتصف وتكون مرتفعة جداً لعمل (الزوم أوت)
+      // نقطة علوية للزوم أوت
       let midX = (currentPos.x + data.camPos.x) / 2;
-      let midY = Math.max(currentPos.y, data.camPos.y) + 30; // ارتفاع 30 متر
-      let midZ = Math.max(currentPos.z, data.camPos.z) + 30; // رجوع 30 متر للخلف
+      let midY = Math.max(currentPos.y, data.camPos.y) + 25; 
+      let midZ = Math.max(currentPos.z, data.camPos.z) + 15; 
 
-      // 1. حركة الكاميرا للأعلى والخلف (Zoom Out)
-      cameraEl.setAttribute('animation__zoomout', `property: position; to: ${midX} ${midY} ${midZ}; dur: 800; easing: easeOutSine`);
-      
-      // حركة الهدف (Target) بنعومة
-      cameraEl.setAttribute('animation__target', `property: orbit-controls.target; to: ${data.camTarget.x} ${data.camTarget.y} ${data.camTarget.z}; dur: 1600; easing: easeInOutSine`);
+      // الأنيميشن
+      cameraEl.setAttribute('animation__zoomout', `property: position; to: ${midX} ${midY} ${midZ}; dur: 700; easing: easeOutQuad`);
+      cameraEl.setAttribute('animation__target', `property: orbit-controls.target; to: ${data.camTarget.x} ${data.camTarget.y} ${data.camTarget.z}; dur: 1400; easing: easeInOutSine`);
 
-      // 2. حركة الكاميرا للأسفل نحو الموديل الجديد (Zoom In) بعد 800 ملي ثانية
       setTimeout(() => {
         cameraEl.removeAttribute('animation__zoomout');
-        cameraEl.setAttribute('animation__zoomin', `property: position; to: ${data.camPos.x} ${data.camPos.y} ${data.camPos.z}; dur: 800; easing: easeInSine`);
-      }, 800);
+        cameraEl.setAttribute('animation__zoomin', `property: position; to: ${data.camPos.x} ${data.camPos.y} ${data.camPos.z}; dur: 700; easing: easeInQuad`);
+      }, 700);
 
-      // 3. إظهار البيانات بعد انتهاء الحركة (1600 ملي ثانية)
       setTimeout(() => {
         cameraEl.removeAttribute('animation__zoomin');
         cameraEl.removeAttribute('animation__target');
         
+        // تجهيز اللوحة
         document.getElementById('panel-title').innerText = data.title;
         document.getElementById('panel-desc').innerText = data.desc;
         let galleryHtml = '';
         if (data.images) {
           data.images.split(',').forEach(img => {
-            galleryHtml += `<img src="${img.trim()}" alt="صورة توضيحية">`;
+            galleryHtml += `<div class="gallery-card"><img src="${img.trim()}" alt="صورة توضيحية"></div>`;
           });
         }
         document.getElementById('gallery-container').innerHTML = galleryHtml;
-        document.getElementById('info-panel').style.display = 'block';
-      }, 1600);
+        
+        // تحديد موقع اللوحة بناءً على الموديل
+        let panel = document.getElementById('info-panel');
+        if (data.panelSide === 'right') {
+          panel.style.left = 'auto';
+          panel.style.right = '5%';
+        } else {
+          panel.style.right = 'auto';
+          panel.style.left = '5%';
+        }
+        
+        panel.style.display = 'block';
+        isAnimating = false;
+      }, 1450);
     }
 
     function closePanel() {
       document.getElementById('info-panel').style.display = 'none';
     }
 
-    // تفاعل النقطة مع الماوس لتعمل نفس وظيفة الأسهم
+    // تفاعل النقطة العلوية
     AFRAME.registerComponent('hotspot-action', {
       schema: { index: {type: 'number'} },
       init: function () {
@@ -195,8 +224,13 @@
             currentIndex = this.data.index;
             animateCameraToCurrentModel();
           } else {
-            // إذا كنت بالفعل في الموديل، فقط أظهر النافذة
-            document.getElementById('info-panel').style.display = 'block';
+            let panel = document.getElementById('info-panel');
+            if (siteData[currentIndex].panelSide === 'right') {
+              panel.style.left = 'auto'; panel.style.right = '5%';
+            } else {
+              panel.style.right = 'auto'; panel.style.left = '5%';
+            }
+            panel.style.display = 'block';
           }
         });
       }
@@ -214,10 +248,11 @@
 
     <!-- أسهم التنقل -->
     <div class="nav-arrows-container">
-      <div class="nav-arrow" onclick="goToPrev()">&#10095;</div> <!-- الأيمن يذهب للموديل السابق (يمين) -->
-      <div class="nav-arrow" onclick="goToNext()">&#10094;</div> <!-- الأيسر يذهب للموديل التالي (يسار) -->
+      <div class="nav-arrow" onclick="goToNext()">&#10095;</div> 
+      <div class="nav-arrow" onclick="goToPrev()">&#10094;</div> 
     </div>
 
+    <!-- البوب-أب الجانبي -->
     <div id="info-panel">
       <button class="close-btn" onclick="closePanel()">✖</button>
       <h2 id="panel-title">--</h2>
@@ -225,62 +260,71 @@
       <div id="gallery-container" class="gallery-container"></div>
     </div>
 
-    <!-- 
-      تفعيل الضباب (Fog) لدمج الأرضية مع السماء وإخفاء خط الأفق الحاد.
-      تفعيل antialias لمنع التشويش.
-    -->
-    <a-scene embedded antialias="true" shadow="type: pcfsoft" fog="type: exponential; color: #02050a; density: 0.015" vr-mode-ui="enabled: true">
+    <!-- إعدادات الريندر لمنع الزبزبة: logaritmicDepthBuffer -->
+    <a-scene embedded antialias="true" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: false">
       
       <a-assets timeout="30000">
         <a-asset-item id="model-jamarat" src="jamaraat.glb"></a-asset-item>
         <a-asset-item id="model-khimaa" src="KHIMAA.glb"></a-asset-item>
       </a-assets>
 
-      <a-sky color="#02050a"></a-sky>
+      <a-sky opacity="0"></a-sky>
       
-      <!-- أرضية الشبكة تتلاشى مع الضباب في الأفق -->
-      <a-plane position="0 0 0" rotation="-90 0 0" width="2000" height="2000" neon-grid shadow="receive: true"></a-plane>
+      <!-- الشبكة -->
+      <a-plane position="0 0 0" rotation="-90 0 0" width="2000" height="2000" neon-grid></a-plane>
 
-      <!-- الإضاءة العلوية الزرقاء الناعمة التي تغمر الكانفس بالكامل -->
-      <a-light type="ambient" color="#1e3a8a" intensity="1.2"></a-light>
-      <!-- كشاف قوي من الأعلى لإضاءة الموديلات بقوة وإسقاط ظلال -->
-      <a-light type="directional" color="#e0f2fe" intensity="1.8" position="0 80 20" castShadow="true" shadow-mapSize="2048"></a-light>
-      <a-light type="point" color="#00aaff" intensity="1" position="0 5 10" distance="100"></a-light>
+      <!-- 
+        الإضاءة العلوية الناعمة (هالة زرقاء على الأرضية) 
+        تم استبدال الكشاف بـ Point Light ناعم من الأعلى
+      -->
+      <a-light type="ambient" color="#030b1a" intensity="1.5"></a-light>
+      <a-light type="point" color="#0055ff" intensity="1.2" position="0 60 0" distance="150" decay="2"></a-light>
+      <!-- إضاءة مساعدة خفيفة لإبراز تفاصيل الموديل -->
+      <a-light type="directional" color="#ffffff" intensity="0.4" position="10 30 20"></a-light>
 
       <a-entity id="models-group">
         
         <!-- === الموديل الأول: الجمرات === -->
         <a-entity position="-15 0 0">
-          <a-gltf-model src="#model-jamarat" scale="0.005 0.005 0.005" shadow="cast: true"></a-gltf-model>
+          <!-- 🔴 تحكم في حجم الجمرات من هنا -->
+          <a-gltf-model src="#model-jamarat" scale="0.005 0.005 0.005"></a-gltf-model>
           
-          <!-- النقطة التفاعلية -->
-          <a-entity line="start: 0 0.5 0; end: 0 3.5 0; color: #00d2ff; opacity: 0.6"></a-entity>
-          <a-sphere class="clickable" position="0 3.5 0" radius="0.06" color="#ffffff" material="shader: flat" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 3.7 0"
+          <!-- النقطة البيضاء العلوية التفاعلية -->
+          <a-entity line="start: 0 0.5 0; end: 0 4.5 0; color: #ffffff; opacity: 0.4"></a-entity>
+          <!-- الكرة التفاعلية (شفافة وتعمل كزر) -->
+          <a-sphere class="clickable" position="0 4.5 0" radius="0.4" opacity="0"
                     hotspot-action="index: 0"></a-sphere>
-          <a-sphere position="0 3.5 0" radius="0.12" color="#00d2ff" material="shader: flat; transparent: true; opacity: 0.4"
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 3.7 0"></a-sphere>
+          <!-- المظهر المرئي للنقطة البيضاء المضيئة -->
+          <a-sphere position="0 4.5 0" radius="0.15" color="#ffffff" material="shader: flat" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.7 0"
+                    pointer-events="none"></a-sphere>
+          <a-sphere position="0 4.5 0" radius="0.3" color="#ffffff" material="shader: flat; transparent: true; opacity: 0.2"
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.7 0"
+                    pointer-events="none"></a-sphere>
         </a-entity>
 
         <!-- === الموديل الثاني: الخيام === -->
         <a-entity position="15 0 0">
-          <!-- 🔴 تم تكبير الخيام بقوة (من 0.005 إلى 5). إذا ظلت صغيرة اجعلها 10 أو 20 -->
-          <a-gltf-model src="#model-khimaa" scale="5 5 5" shadow="cast: true"></a-gltf-model>
+          <!-- 🔴 تم تكبير الخيام. جرب 0.1 أو 1 أو 5 حتى يضبط معك تماماً -->
+          <a-gltf-model src="#model-khimaa" scale="1 1 1"></a-gltf-model>
           
-          <!-- النقطة التفاعلية -->
-          <a-entity line="start: 0 0.5 0; end: 0 3.5 0; color: #00d2ff; opacity: 0.6"></a-entity>
-          <a-sphere class="clickable" position="0 3.5 0" radius="0.06" color="#ffffff" material="shader: flat" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 3.7 0"
+          <!-- النقطة البيضاء العلوية التفاعلية -->
+          <a-entity line="start: 0 0.5 0; end: 0 4.5 0; color: #ffffff; opacity: 0.4"></a-entity>
+          <a-sphere class="clickable" position="0 4.5 0" radius="0.4" opacity="0"
                     hotspot-action="index: 1"></a-sphere>
-          <a-sphere position="0 3.5 0" radius="0.12" color="#00d2ff" material="shader: flat; transparent: true; opacity: 0.4"
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 3.7 0"></a-sphere>
+          <a-sphere position="0 4.5 0" radius="0.15" color="#ffffff" material="shader: flat" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.7 0"
+                    pointer-events="none"></a-sphere>
+          <a-sphere position="0 4.5 0" radius="0.3" color="#ffffff" material="shader: flat; transparent: true; opacity: 0.2"
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.7 0"
+                    pointer-events="none"></a-sphere>
         </a-entity>
 
       </a-entity>
 
       <!-- الكاميرا المدارية -->
       <a-entity camera look-controls="enabled: false" 
-                orbit-controls="target: -15 0 0; minDistance: 5; maxDistance: 150; initialPosition: -15 12 20; 
+                orbit-controls="target: -15 0 0; minDistance: 5; maxDistance: 120; initialPosition: -15 15 25; 
                                 enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.08;">
       </a-entity>
       
