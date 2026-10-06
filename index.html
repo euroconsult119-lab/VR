@@ -19,7 +19,6 @@
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
     }
 
-    /* الشعارات - بيضاء ومصغرة */
     .logos-wrapper {
       position: absolute; top: 25px; left: 0; right: 0;
       display: flex; justify-content: space-between; padding: 0 40px;
@@ -32,11 +31,10 @@
       opacity: 0.85;
     }
 
-    /* تصميم البوب-أب التقني الناعم */
     #info-panel {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       width: 90%; max-width: 500px;
-      background: rgba(8, 12, 20, 0.85); 
+      background: rgba(8, 12, 20, 0.9); 
       color: #fff; padding: 30px; border-radius: 16px; z-index: 100;
       display: none; 
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.05);
@@ -66,29 +64,28 @@
   </style>
 
   <script>
-    // 1. مكون مخصص لإنشاء شبكة لا نهائية ناعمة (C4D Style)
+    // تم تصغير المربعات عبر زيادة التكرار (repeat) ليصبح 5000 بدلاً من 1000
     AFRAME.registerComponent('smooth-grid', {
       init: function () {
         let canvas = document.createElement('canvas');
-        canvas.width = 256; canvas.height = 256;
+        canvas.width = 128; canvas.height = 128;
         let ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#050508'; // لون الأرضية
-        ctx.fillRect(0, 0, 256, 256);
-        ctx.strokeStyle = '#0e1f33'; // لون الخطوط الأزرق الهادئ جداً
+        ctx.fillStyle = '#050508'; 
+        ctx.fillRect(0, 0, 128, 128);
+        ctx.strokeStyle = '#0e1f33'; 
         ctx.lineWidth = 2;
-        ctx.strokeRect(0, 0, 256, 256);
+        ctx.strokeRect(0, 0, 128, 128);
         
         let texture = new THREE.CanvasTexture(canvas);
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(1000, 1000); // تكرار لمسافة شاسعة
+        texture.repeat.set(5000, 5000); 
         
         this.el.getObject3D('mesh').material.map = texture;
         this.el.getObject3D('mesh').material.needsUpdate = true;
       }
     });
 
-    // 2. مكون التفاعل مع النقاط لإظهار النوافذ
     AFRAME.registerComponent('hotspot-action', {
       schema: {
         title: {type: 'string'},
@@ -111,7 +108,6 @@
 
           let panel = document.getElementById('info-panel');
           panel.style.display = 'block';
-          panel.style.animation = 'fadeIn 0.3s ease';
         });
       }
     });
@@ -139,47 +135,45 @@
 
     <a-scene embedded cursor="rayOrigin: mouse" raycaster="objects: .clickable" vr-mode-ui="enabled: true">
       
-      <a-assets timeout="20000">
-        <!-- المسارات المباشرة للملفات المرفوعة بجوار index.html -->
+      <a-assets timeout="30000">
         <a-asset-item id="model-jamarat" src="jamaraat.glb"></a-asset-item>
         <a-asset-item id="model-khimaa" src="KHIMAA.glb"></a-asset-item>
       </a-assets>
 
       <a-sky color="#050508"></a-sky>
       
-      <!-- أرضية الشبكة اللانهائية الناعمة -->
-      <a-plane position="0 0 0" rotation="-90 0 0" width="10000" height="10000" smooth-grid material="shader: flat; transparent: false;"></a-plane>
+      <!-- أرضية الشبكة بمربعات صغيرة جداً -->
+      <a-plane position="0 0 0" rotation="-90 0 0" width="10000" height="10000" smooth-grid material="shader: flat;"></a-plane>
 
-      <!-- الإضاءة من الأعلى (القمر) + محيطية خافتة -->
-      <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
-      <a-light type="directional" color="#ffffff" intensity="1.2" position="0 100 0" rotation="-90 0 0"></a-light>
+      <!-- إضاءة ساطعة جداً (قمر قوي + إضاءة محيطية شاملة) -->
+      <a-light type="ambient" color="#ffffff" intensity="1.5"></a-light>
+      <a-light type="directional" color="#ffffff" intensity="2" position="10 50 10"></a-light>
+      <a-light type="directional" color="#dbeafe" intensity="1" position="-10 30 -10"></a-light>
 
-      <!-- حاوية دوران المشهد (دخول مرن وحركة بطيئة) -->
-      <a-entity animation="property: rotation; to: 0 360 0; loop: true; dur: 80000; easing: linear;">
+      <!-- حاوية الموديلات (ثابتة تماماً بدون دوران) -->
+      <a-entity position="0 0 0">
         
-        <!-- الموديل الأول: الجمرات -->
+        <!-- الجمرات -->
         <a-entity position="-5 0 0">
-          <!-- تم تصغير الحجم جداً (0.002) ليتناسب مع الكاميرا، مع أنيميشن الدخول المرن -->
-          <a-gltf-model src="#model-jamarat" 
-                        animation="property: scale; from: 0 0 0; to: 0.002 0.002 0.002; dur: 2500; easing: easeOutQuart;">
-          </a-gltf-model>
+          <!-- الموديل ثابت والمقاس مصغر ليكون مرئياً بالكامل -->
+          <a-gltf-model src="#model-jamarat" scale="0.002 0.002 0.002"></a-gltf-model>
           
-          <a-entity line="start: 0 0 0; end: 0 5 0; color: #ffffff"></a-entity>
-          <a-sphere class="clickable" position="0 5 0" radius="0.2" color="#ffffff" material="shader: flat"
-                    animation="property: position; dir: alternate; dur: 1500; loop: true; to: 0 5.3 0"
+          <!-- نقطة البوب-أب -->
+          <a-entity line="start: 0 0 0; end: 0 4 0; color: #ffffff"></a-entity>
+          <a-sphere class="clickable" position="0 4 0" radius="0.2" color="#ffffff" material="shader: flat"
+                    animation="property: position; dir: alternate; dur: 1500; loop: true; to: 0 4.3 0"
                     hotspot-action="title: منشأة الجمرات التقنية; 
                                     desc: نص تجريبي: تم تجهيز هذا الموديل بأبعاد دقيقة ليتناسب مع الرؤية الفضائية ضمن منصة المشاعر المقدسة.; 
                                     images: https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=400,https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=400">
           </a-sphere>
         </a-entity>
 
-        <!-- الموديل الثاني: الخيام -->
-        <!-- تم وضع الخيام في موقع (x=5) لتكون بجوار الجمرات ولا تتداخل معها -->
+        <!-- الخيام -->
         <a-entity position="5 0 0">
-          <a-gltf-model src="#model-khimaa" 
-                        animation="property: scale; from: 0 0 0; to: 0.002 0.002 0.002; dur: 2500; easing: easeOutQuart; delay: 500;">
-          </a-gltf-model>
+          <!-- الموديل ثابت والمقاس مصغر -->
+          <a-gltf-model src="#model-khimaa" scale="0.002 0.002 0.002"></a-gltf-model>
           
+          <!-- نقطة البوب-أب -->
           <a-entity line="start: 0 0 0; end: 0 4 0; color: #ffffff"></a-entity>
           <a-sphere class="clickable" position="0 4 0" radius="0.2" color="#ffffff" material="shader: flat"
                     animation="property: position; dir: alternate; dur: 1500; loop: true; to: 0 4.3 0"
@@ -191,11 +185,10 @@
 
       </a-entity>
 
-      <!-- الكاميرا المرنة (Smooth Zoom & Damping) -->
-      <!-- تم تفعيل الدوران التلقائي والنعومة القصوى في الاستجابة للماوس -->
+      <!-- الكاميرا مقتربة بشكل افتراضي لتبدأ الرؤية واضحة -->
       <a-entity camera look-controls="enabled: false" 
-                orbit-controls="target: 0 0 0; minDistance: 5; maxDistance: 100; initialPosition: 0 15 25; 
-                                enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.05;">
+                orbit-controls="target: 0 0 0; minDistance: 2; maxDistance: 100; initialPosition: 0 8 15; 
+                                enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.1;">
       </a-entity>
       
     </a-scene>
