@@ -11,7 +11,7 @@
     * { box-sizing: border-box; }
     body, html {
       margin: 0; padding: 0; width: 100%; height: 100%;
-      overflow: hidden; background: #020205; /* لون خلفية أسود عميق */
+      overflow: hidden; background: #050508; 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
@@ -26,49 +26,69 @@
       z-index: 100; pointer-events: none; 
     }
     .logos-wrapper img { 
-      height: 45px; /* تصغير الحجم جداً */
+      height: 40px; 
       object-fit: contain; pointer-events: auto;
-      filter: brightness(0) invert(1); /* تحويل الشعار للون الأبيض */
-      opacity: 0.8;
+      filter: brightness(0) invert(1); 
+      opacity: 0.85;
     }
 
-    /* تصميم البوب-أب التقني (Cyberpunk UI) */
+    /* تصميم البوب-أب التقني الناعم */
     #info-panel {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       width: 90%; max-width: 500px;
-      background: rgba(4, 8, 15, 0.85); /* زجاج داكن */
+      background: rgba(8, 12, 20, 0.85); 
       color: #fff; padding: 30px; border-radius: 16px; z-index: 100;
       display: none; 
-      box-shadow: 0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 20px rgba(0, 243, 255, 0.1);
-      border: 1px solid rgba(0, 243, 255, 0.4);
-      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
     }
     .close-btn {
       position: absolute; top: 15px; left: 20px;
-      background: none; border: none; color: #00f3ff; font-size: 28px;
-      cursor: pointer; transition: 0.3s; text-shadow: 0 0 10px #00f3ff;
+      background: none; border: none; color: #fff; font-size: 26px;
+      cursor: pointer; transition: 0.3s; opacity: 0.6;
     }
-    .close-btn:hover { color: #fff; transform: scale(1.1); }
+    .close-btn:hover { opacity: 1; transform: scale(1.1); }
     #panel-title { 
-      margin: 0 0 15px 0; color: #00f3ff; font-size: 24px; 
-      border-bottom: 1px solid rgba(0, 243, 255, 0.3); padding-bottom: 15px;
-      text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+      margin: 0 0 15px 0; color: #ffffff; font-size: 22px; font-weight: 600;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 15px;
     }
-    #panel-desc { line-height: 1.8; font-size: 15px; margin-bottom: 20px; color: #d1d5db; }
+    #panel-desc { line-height: 1.8; font-size: 14px; margin-bottom: 20px; color: #b0b5be; }
     
-    /* كروت الصور السفلية */
     .gallery-container {
-      display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;
+      display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px;
     }
     .gallery-container img {
-      height: 110px; min-width: 150px; border-radius: 8px; 
-      border: 1px solid rgba(0, 243, 255, 0.3);
-      object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      height: 100px; min-width: 140px; border-radius: 8px; 
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      object-fit: cover;
     }
   </style>
 
   <script>
-    // سكربت التفاعل مع النقاط لعرض البوب-أب
+    // 1. مكون مخصص لإنشاء شبكة لا نهائية ناعمة (C4D Style)
+    AFRAME.registerComponent('smooth-grid', {
+      init: function () {
+        let canvas = document.createElement('canvas');
+        canvas.width = 256; canvas.height = 256;
+        let ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#050508'; // لون الأرضية
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.strokeStyle = '#0e1f33'; // لون الخطوط الأزرق الهادئ جداً
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, 256, 256);
+        
+        let texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1000, 1000); // تكرار لمسافة شاسعة
+        
+        this.el.getObject3D('mesh').material.map = texture;
+        this.el.getObject3D('mesh').material.needsUpdate = true;
+      }
+    });
+
+    // 2. مكون التفاعل مع النقاط لإظهار النوافذ
     AFRAME.registerComponent('hotspot-action', {
       schema: {
         title: {type: 'string'},
@@ -78,7 +98,6 @@
       init: function () {
         this.el.addEventListener('click', () => {
           let data = this.data;
-
           document.getElementById('panel-title').innerText = data.title;
           document.getElementById('panel-desc').innerText = data.desc;
           
@@ -90,10 +109,9 @@
           }
           document.getElementById('gallery-container').innerHTML = galleryHtml;
 
-          // تأثير ظهور ناعم
           let panel = document.getElementById('info-panel');
           panel.style.display = 'block';
-          panel.style.animation = 'fadeIn 0.4s ease';
+          panel.style.animation = 'fadeIn 0.3s ease';
         });
       }
     });
@@ -107,13 +125,11 @@
 
   <div id="vr-container">
     
-    <!-- الشعارات باللون الأبيض -->
     <div class="logos-wrapper">
       <img src="https://haj.gov.sa/_next/image?url=https%3A%2F%2Fhaj.gov.sa%2Fs-core%2F-%2Fmedia%2FProject%2FHAJJ%2FHajj-Logos%2FHeader-Logo.svg%3Fiar%3D0%26hash%3DEA30CCD6D55090BA41D3BA548A24E24A&amp;w=256&amp;q=75" alt="وزارة الحج والعمرة">
       <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
     </div>
 
-    <!-- نافذة البوب-أب التقنية -->
     <div id="info-panel">
       <button class="close-btn" onclick="closePanel()">✖</button>
       <h2 id="panel-title">--</h2>
@@ -123,67 +139,63 @@
 
     <a-scene embedded cursor="rayOrigin: mouse" raycaster="objects: .clickable" vr-mode-ui="enabled: true">
       
-      <a-assets timeout="15000">
-        <!-- الموديلات المرفوعة (تأكد من تطابق الأسماء مع ملفاتك على جيت هب) -->
+      <a-assets timeout="20000">
+        <!-- المسارات المباشرة للملفات المرفوعة بجوار index.html -->
         <a-asset-item id="model-jamarat" src="jamaraat.glb"></a-asset-item>
         <a-asset-item id="model-khimaa" src="KHIMAA.glb"></a-asset-item>
       </a-assets>
 
-      <!-- 1. البيئة: سماء سوداء وشبكة نيون زرقاء -->
-      <a-sky color="#020205"></a-sky>
+      <a-sky color="#050508"></a-sky>
       
-      <!-- أرضية صلبة داكنة -->
-      <a-plane position="0 0 0" rotation="-90 0 0" width="500" height="500" color="#010103"></a-plane>
-      <!-- شبكة النيون المضيئة فوق الأرضية مباشرة -->
-      <a-plane position="0 0.1 0" rotation="-90 0 0" width="200" height="200" wireframe="true" segments-width="80" segments-height="80" color="#00f3ff" opacity="0.3"></a-plane>
+      <!-- أرضية الشبكة اللانهائية الناعمة -->
+      <a-plane position="0 0 0" rotation="-90 0 0" width="10000" height="10000" smooth-grid material="shader: flat; transparent: false;"></a-plane>
 
-      <!-- 2. الإضاءة الاحترافية -->
-      <!-- إضاءة عامة خافتة جداً -->
-      <a-light type="ambient" color="#222233" intensity="0.3"></a-light>
-      <!-- إضاءة "القمر" من الأعلى مباشرة -->
-      <a-light type="directional" color="#ffffff" intensity="1.5" position="0 50 0"></a-light>
-      <!-- وهج أزرق من الأسفل لينعكس على الموديلات -->
-      <a-light type="point" color="#00f3ff" intensity="2" position="0 2 0" distance="80"></a-light>
+      <!-- الإضاءة من الأعلى (القمر) + محيطية خافتة -->
+      <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
+      <a-light type="directional" color="#ffffff" intensity="1.2" position="0 100 0" rotation="-90 0 0"></a-light>
 
-      <!-- 3. حاوية الموديلات (هنا يمكنك تعديل المقاس (scale) لكل موديل ليصبح مناسباً) -->
-      <a-entity id="scene-models" position="0 0 -20">
+      <!-- حاوية دوران المشهد (دخول مرن وحركة بطيئة) -->
+      <a-entity animation="property: rotation; to: 0 360 0; loop: true; dur: 80000; easing: linear;">
         
-        <!-- === الموديل الأول: الجمرات === -->
-        <!-- استخدمنا scale="0.05 0.05 0.05" لتصغيره، غير الرقم إذا كان كبيراً أو صغيراً -->
-        <a-entity position="-15 0 0">
-          <a-gltf-model src="#model-jamarat" scale="0.05 0.05 0.05"></a-gltf-model>
+        <!-- الموديل الأول: الجمرات -->
+        <a-entity position="-5 0 0">
+          <!-- تم تصغير الحجم جداً (0.002) ليتناسب مع الكاميرا، مع أنيميشن الدخول المرن -->
+          <a-gltf-model src="#model-jamarat" 
+                        animation="property: scale; from: 0 0 0; to: 0.002 0.002 0.002; dur: 2500; easing: easeOutQuart;">
+          </a-gltf-model>
           
-          <!-- الخط الأبيض الصاعد من الموديل والنقطة المضيئة -->
-          <a-entity line="start: 0 0 0; end: 0 8 0; color: #ffffff"></a-entity>
-          <a-sphere class="clickable" position="0 8 0" radius="0.4" color="#00f3ff" 
-                    material="shader: flat"
-                    animation="property: position; dir: alternate; dur: 1500; loop: true; to: 0 8.5 0"
+          <a-entity line="start: 0 0 0; end: 0 5 0; color: #ffffff"></a-entity>
+          <a-sphere class="clickable" position="0 5 0" radius="0.2" color="#ffffff" material="shader: flat"
+                    animation="property: position; dir: alternate; dur: 1500; loop: true; to: 0 5.3 0"
                     hotspot-action="title: منشأة الجمرات التقنية; 
-                                    desc: هذا النص وهمي مؤقت. منشأة الجمرات تعتبر من أهم المعالم في المشاعر المقدسة، تم تصميم هذا الموديل ليوضح مسارات الحركة وانسيابية التفويج في العالم الافتراضي.; 
-                                    images: https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=500,https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=500">
+                                    desc: نص تجريبي: تم تجهيز هذا الموديل بأبعاد دقيقة ليتناسب مع الرؤية الفضائية ضمن منصة المشاعر المقدسة.; 
+                                    images: https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=400,https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=400">
           </a-sphere>
         </a-entity>
 
-        <!-- === الموديل الثاني: الخيام === -->
-        <a-entity position="15 0 0">
-          <a-gltf-model src="#model-khimaa" scale="0.05 0.05 0.05"></a-gltf-model>
+        <!-- الموديل الثاني: الخيام -->
+        <!-- تم وضع الخيام في موقع (x=5) لتكون بجوار الجمرات ولا تتداخل معها -->
+        <a-entity position="5 0 0">
+          <a-gltf-model src="#model-khimaa" 
+                        animation="property: scale; from: 0 0 0; to: 0.002 0.002 0.002; dur: 2500; easing: easeOutQuart; delay: 500;">
+          </a-gltf-model>
           
-          <!-- الخط الأبيض الصاعد من الموديل والنقطة المضيئة -->
-          <a-entity line="start: 0 0 0; end: 0 6 0; color: #ffffff"></a-entity>
-          <a-sphere class="clickable" position="0 6 0" radius="0.4" color="#00f3ff" 
-                    material="shader: flat"
-                    animation="property: position; dir: alternate; dur: 1500; loop: true; to: 0 6.5 0"
+          <a-entity line="start: 0 0 0; end: 0 4 0; color: #ffffff"></a-entity>
+          <a-sphere class="clickable" position="0 4 0" radius="0.2" color="#ffffff" material="shader: flat"
+                    animation="property: position; dir: alternate; dur: 1500; loop: true; to: 0 4.3 0"
                     hotspot-action="title: مخيمات الحجاج في منى; 
-                                    desc: نص تجريبي. مدينة الخيام البيضاء مجهزة بأحدث تقنيات السلامة والراحة. هنا يتم استعراض التوزيع المكاني الهندسي لتنظيم الإقامة.; 
-                                    images: https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=500">
+                                    desc: نص تجريبي: مدينة الخيام مجهزة بأحدث معايير السلامة، وهذا العرض يوضح التخطيط الهندسي لمناطق الإسكان.; 
+                                    images: https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=400">
           </a-sphere>
         </a-entity>
 
       </a-entity>
 
-      <!-- الكاميرا المدارية (Orbit Camera) -->
+      <!-- الكاميرا المرنة (Smooth Zoom & Damping) -->
+      <!-- تم تفعيل الدوران التلقائي والنعومة القصوى في الاستجابة للماوس -->
       <a-entity camera look-controls="enabled: false" 
-                orbit-controls="target: 0 0 -20; minDistance: 10; maxDistance: 150; initialPosition: 0 25 35; enablePan: true; enableZoom: true;">
+                orbit-controls="target: 0 0 0; minDistance: 5; maxDistance: 100; initialPosition: 0 15 25; 
+                                enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.05;">
       </a-entity>
       
     </a-scene>
