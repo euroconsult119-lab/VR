@@ -160,40 +160,40 @@
         id: 'jamarat', title: 'منشأة الجمرات',
         desc: 'مجمع معماري حديث مصمم لتسهيل حركة الحجاج أثناء رمي الجمرات، يظهر هنا تفصيل المسارات المتعددة.',
         images: 'https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=300',
-        camTarget: {x: -100, y: 0, z: -100},
-        camPos: {x: -100, y: 20, z: -60}, // Zoom-in قريب
+        camTarget: {x: -100, y: 1, z: -100},
+        camPos: {x: -100, y: 12, z: -65}, // Zoom-in قريب (تغيير Z لتقترب)
         panelPosition: 'right' 
       },
       { // 1: الركن الشمالي الشرقي (يمين أعلى)
         id: 'khimaa', title: 'مخيمات منى',
         desc: 'مدينة الخيام المطورة، توفر إقامة آمنة ومريحة للحجاج ضمن تخطيط هندسي دقيق لمنطقة المشاعر.',
         images: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=300',
-        camTarget: {x: 100, y: 0, z: -100},
-        camPos: {x: 100, y: 20, z: -60}, // Zoom-in قريب
+        camTarget: {x: 100, y: 1, z: -100},
+        camPos: {x: 100, y: 12, z: -65}, // Zoom-in قريب (تغيير Z لتقترب)
         panelPosition: 'left' 
       },
       { // 2: المنتصف
         id: 'center', title: 'المركز الرئيسي',
         desc: 'منطقة تفاعلية مستقبلية تتوسط معالم المشاعر المقدسة لتوزيع الحركة.',
         images: 'https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=300',
-        camTarget: {x: 0, y: 0, z: 0},
-        camPos: {x: 0, y: 20, z: 40},
+        camTarget: {x: 0, y: 1, z: 0},
+        camPos: {x: 0, y: 12, z: 35},
         panelPosition: 'right'
       },
       { // 3: الركن الجنوبي الغربي (يسار أسفل)
         id: 'spot3', title: 'مسجد الخيف',
         desc: 'محطة مستقبلية: سيتم عرض الموديل هنا لاحقاً.',
         images: '',
-        camTarget: {x: -100, y: 0, z: 100},
-        camPos: {x: -100, y: 20, z: 140},
+        camTarget: {x: -100, y: 1, z: 100},
+        camPos: {x: -100, y: 12, z: 135},
         panelPosition: 'right'
       },
       { // 4: الركن الجنوبي الشرقي (يمين أسفل)
         id: 'spot4', title: 'مسجد البيعة',
         desc: 'محطة مستقبلية: سيتم عرض الموديل هنا لاحقاً.',
         images: '',
-        camTarget: {x: 100, y: 0, z: 100},
-        camPos: {x: 100, y: 20, z: 140},
+        camTarget: {x: 100, y: 1, z: 100},
+        camPos: {x: 100, y: 12, z: 135},
         panelPosition: 'left'
       }
     ];
@@ -238,7 +238,7 @@
       
       // الكاميرا ترتفع وترجع للخلف (Zoom Out - رؤية واسعة)
       let midX = (currentPos.x + data.camPos.x) / 2;
-      let midY = Math.max(currentPos.y, data.camPos.y) + 60; // ترتفع 60 متر
+      let midY = Math.max(currentPos.y, data.camPos.y) + 60; // ترتفع 60 متر للزوم أوت
       let midZ = Math.max(currentPos.z, data.camPos.z) + 40; 
 
       cameraEl.setAttribute('animation__zoomout', `property: position; to: ${midX} ${midY} ${midZ}; dur: 1200; easing: easeOutQuad`);
@@ -348,6 +348,10 @@
       </div>
     </div>
 
+    <!-- 
+      إعداد logarithmicDepthBuffer: true يحل مشكلة التآكل (Clipping / Z-fighting)
+      وإعداد الكاميرا بـ near: 0.1; far: 10000; ضروري جداً للمسافات الكبيرة
+    -->
     <a-scene embedded antialias="true" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: true">
       
       <a-assets timeout="30000">
@@ -367,13 +371,14 @@
 
       <!-- 
         الموديلات: 
-        تمت زيادة حجم הגمرات لـ 0.05 
+        تمت زيادة حجم الجمرات لـ 0.05 
         وإبعاد الموديلات لـ مسافة 100 و -100 
+        وتم رفع الموديلات بمقدار Y=1.0 لمنع التآكل السطحي مع الشبكة
       -->
       <a-entity id="models-group">
         
         <!-- 1. الركن الشمالي الغربي: الجمرات (تم تكبيرها وإبعادها) -->
-        <a-entity position="-100 0.5 -100">
+        <a-entity position="-100 1.0 -100">
           <a-gltf-model src="#model-jamarat" scale="0.05 0.05 0.05"></a-gltf-model>
           
           <a-entity line="start: 0 0 0; end: 0 10 0; color: #ffffff; opacity: 0.5"></a-entity>
@@ -387,7 +392,7 @@
         </a-entity>
 
         <!-- 2. الركن الشمالي الشرقي: الخيام -->
-        <a-entity position="100 0.5 -100">
+        <a-entity position="100 1.0 -100">
           <a-gltf-model src="#model-khimaa" scale="5 5 5"></a-gltf-model>
           
           <a-entity line="start: 0 0 0; end: 0 10 0; color: #ffffff; opacity: 0.5"></a-entity>
@@ -399,7 +404,7 @@
         </a-entity>
 
         <!-- 3. المنتصف (محطة فارغة للنماذج القادمة) -->
-        <a-entity position="0 0.5 0">
+        <a-entity position="0 1.0 0">
           <a-entity line="start: 0 0 0; end: 0 10 0; color: #ffffff; opacity: 0.5"></a-entity>
           <a-sphere class="clickable" position="0 10 0" radius="1.5" opacity="0" hotspot-action="index: 2"></a-sphere>
           <a-sphere position="0 10 0" radius="0.25" color="#ffffff" material="shader: flat" 
@@ -407,7 +412,7 @@
         </a-entity>
 
         <!-- 4. الركن الجنوبي الغربي (محطة فارغة) -->
-        <a-entity position="-100 0.5 100">
+        <a-entity position="-100 1.0 100">
           <a-entity line="start: 0 0 0; end: 0 10 0; color: #ffffff; opacity: 0.5"></a-entity>
           <a-sphere class="clickable" position="0 10 0" radius="1.5" opacity="0" hotspot-action="index: 3"></a-sphere>
           <a-sphere position="0 10 0" radius="0.25" color="#ffffff" material="shader: flat" 
@@ -415,7 +420,7 @@
         </a-entity>
 
         <!-- 5. الركن الجنوبي الشرقي (محطة فارغة) -->
-        <a-entity position="100 0.5 100">
+        <a-entity position="100 1.0 100">
           <a-entity line="start: 0 0 0; end: 0 10 0; color: #ffffff; opacity: 0.5"></a-entity>
           <a-sphere class="clickable" position="0 10 0" radius="1.5" opacity="0" hotspot-action="index: 4"></a-sphere>
           <a-sphere position="0 10 0" radius="0.25" color="#ffffff" material="shader: flat" 
@@ -427,9 +432,10 @@
       <!-- 
         الكاميرا الافتتاحية: مرفوعة وبعيدة جداً (Z=200, Y=100) 
         لرؤية بانورامية تشمل جميع الموديلات كـ Fit to screen عند بدء الصفحة
+        إعداد near="0.1" far="10000" يحمي الموديلات من القص بسبب مسافة الكاميرا.
       -->
-      <a-entity camera look-controls="enabled: false" 
-                orbit-controls="target: 0 0 0; minDistance: 5; maxDistance: 300; initialPosition: 0 100 200; 
+      <a-entity camera="near: 0.1; far: 10000" look-controls="enabled: false" 
+                orbit-controls="target: 0 0 0; minDistance: 5; maxDistance: 400; initialPosition: 0 100 200; 
                                 enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.05; rotateSpeed: 0.6;">
       </a-entity>
       
