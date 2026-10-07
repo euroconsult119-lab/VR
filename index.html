@@ -7,15 +7,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
   
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <!-- مكتبة لدعم النصوص 3D باللغة العربية -->
-  <script src="https://unpkg.com/aframe-troika-text-component@2.0.0/dist/aframe-troika-text-component.min.js"></script>
   <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
 
   <style>
     body, html {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
       font-family: 'Cairo', sans-serif;
-      background: radial-gradient(circle at top, #06193b 0%, #010308 90%);
+      /* تم إزالة الخلفية المتدرجة من هنا ونقلها للـ Sky لكي يندمج الضباب بشكل صحيح */
+      background: #02050d;
     }
 
     #vr-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -39,7 +38,7 @@
     }
     .start-title {
       color: #ffffff; font-size: 32px; font-weight: 800; text-shadow: 0 4px 15px rgba(0, 150, 255, 0.6);
-      letter-spacing: 1px; margin: 0; text-align: center;
+      margin: 0; text-align: center;
     }
 
     /* الشعارات */
@@ -50,14 +49,14 @@
     }
     .logos-wrapper img { 
       height: 35px; object-fit: contain; pointer-events: auto;
-      filter: brightness(0) invert(1); opacity: 0.9;
+      filter: brightness(0) invert(1); opacity: 0.85;
     }
 
-    /* أسهم التنقل السفلية */
+    /* أسهم التنقل (مضبوطة الاتجاه) */
     .nav-arrows-container {
       position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-      display: flex; align-items: center; gap: 30px; z-index: 100; direction: ltr;
-      visibility: hidden; /* مخفية حتى نضغط Play */
+      display: flex; align-items: center; gap: 30px; z-index: 100; 
+      visibility: hidden; /* مخفية حتى بدء العرض */
     }
     .nav-arrow {
       pointer-events: auto; width: 45px; height: 45px; border-radius: 50%;
@@ -75,10 +74,9 @@
       text-shadow: 0 0 10px rgba(0, 150, 255, 0.5); pointer-events: none;
     }
 
-    /* النافذة الجانبية المائلة (البوب أب) */
+    /* البوب-أب الجانبي المائل 3D */
     #info-panel-container {
       position: absolute; top: 50%; width: 340px; z-index: 100; display: none;
-      right: 5%; transform: translateY(-50%) perspective(1000px) rotateY(-8deg); 
       transform-style: preserve-3d;
     }
     .info-box {
@@ -120,13 +118,13 @@
   </style>
 
   <script>
-    // تصميم الشبكة 
+    // 1. مكون الشبكة 
     AFRAME.registerComponent('neon-grid', {
       init: function () {
         let canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 512;
         let ctx = canvas.getContext('2d');
-        ctx.fillStyle = 'rgba(0, 0, 0, 1)'; 
+        ctx.fillStyle = 'rgba(2, 5, 13, 1)'; // لون مطابق للسماء والضباب
         ctx.fillRect(0, 0, 512, 512);
         
         ctx.strokeStyle = 'rgba(0, 150, 255, 0.2)'; 
@@ -141,13 +139,53 @@
         texture.repeat.set(500, 500); 
         
         let material = new THREE.MeshStandardMaterial({ 
-          map: texture, roughness: 0.7, metalness: 0.2 
+          map: texture, roughness: 0.8, metalness: 0.1 
         });
         this.el.getObject3D('mesh').material = material;
       }
     });
 
-    // بيانات الموديلات
+    // 2. مكون صانع النصوص العربية النيون 3D (الحل السحري المضمون)
+    AFRAME.registerComponent('neon-arabic-text', {
+      schema: {
+        text: {type: 'string', default: ''},
+        size: {type: 'number', default: 60},
+        color: {type: 'string', default: '#00d2ff'}
+      },
+      init: function () {
+        let canvas = document.createElement('canvas');
+        canvas.width = 1024; canvas.height = 256;
+        let ctx = canvas.getContext('2d');
+
+        // تجهيز الخط والتوسيط
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = `bold ${this.data.size}px Cairo, sans-serif`;
+
+        // تأثير التوهج المزدوج للنيون
+        ctx.shadowColor = this.data.color;
+        ctx.shadowBlur = 25;
+        ctx.fillStyle = '#ffffff'; 
+        ctx.fillText(this.data.text, canvas.width/2, canvas.height/2);
+        
+        // رسم الخط الخارجي
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = this.data.color;
+        ctx.lineWidth = 2;
+        ctx.strokeText(this.data.text, canvas.width/2, canvas.height/2);
+
+        let texture = new THREE.CanvasTexture(canvas);
+        let material = new THREE.MeshBasicMaterial({
+          map: texture, transparent: true, alphaTest: 0.1
+        });
+        
+        // تطبيق الكانفس كخامة على Plane مسطح يعطي إيحاء الـ 3D
+        let geometry = new THREE.PlaneGeometry(20, 5);
+        let mesh = new THREE.Mesh(geometry, material);
+        this.el.setObject3D('mesh', mesh);
+      }
+    });
+
     const siteData = [
       { 
         id: 'scene-welcome', title: 'مشهد الترحيب', desc: '', images: '',
@@ -157,13 +195,13 @@
         id: 'model_jamarat', title: 'منشأة الجمرات',
         desc: 'مجمع معماري حديث مصمم لتسهيل حركة الحجاج أثناء رمي الجمرات، يظهر هنا تفصيل المسارات المتعددة.',
         images: 'https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=300,https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=300',
-        camRadius: 35, camHeight: 18, targetY: 10, panelPosition: 'right'
+        camRadius: 35, camHeight: 25, targetY: 15, panelPosition: 'right'
       },
       { 
         id: 'model_khimaa', title: 'مخيمات منى',
         desc: 'مدينة الخيام المطورة، توفر إقامة آمنة ومريحة للحجاج ضمن تخطيط هندسي دقيق لمنطقة المشاعر.',
         images: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=300',
-        camRadius: 35, camHeight: 18, targetY: 10, panelPosition: 'left'
+        camRadius: 40, camHeight: 25, targetY: 15, panelPosition: 'left'
       }
     ];
 
@@ -180,23 +218,27 @@
       }, 800);
     }
 
-    function goToPrev() {
-      if(!isStarted) return;
-      currentIndex = (currentIndex - 1 + siteData.length) % siteData.length;
+    // تم ضبط اتجاهات الأسهم هنا
+    // السهم الأيمن ينقل للمبنى الأيمن (الخيام - index 2)
+    function goToRight() {
+      if(!isStarted || isAnimating) return;
+      currentIndex = 2; // الخيام
       showCurrentModel();
     }
 
-    function goToNext() {
-      if(!isStarted) return;
-      currentIndex = (currentIndex + 1) % siteData.length;
+    // السهم الأيسر ينقل للمبنى الأيسر (الجمرات - index 1)
+    function goToLeft() {
+      if(!isStarted || isAnimating) return;
+      currentIndex = 1; // الجمرات
       showCurrentModel();
     }
 
+    let isAnimating = false;
     function showCurrentModel() {
+      isAnimating = true;
       let data = siteData[currentIndex];
       closePanel();
 
-      // إخفاء جميع الموديلات
       document.getElementById('scene-welcome').setAttribute('visible', 'false');
       let allModels = document.querySelectorAll('.scene-model');
       allModels.forEach(model => {
@@ -208,14 +250,13 @@
       let orbit = cameraEl.components['orbit-controls'];
 
       if(currentIndex === 0) {
-        // العودة لمشهد الترحيب (النيون)
         document.getElementById('scene-welcome').setAttribute('visible', 'true');
         orbit.target.set(0, data.targetY, 0);
         cameraEl.setAttribute('position', `0 ${data.camHeight} ${data.camRadius}`);
+        isAnimating = false;
         return;
       }
 
-      // إظهار الموديل المحدد وتوجيه الكاميرا له
       let currentModelEl = document.getElementById(data.id);
       if(currentModelEl) {
         currentModelEl.setAttribute('visible', 'true');
@@ -223,12 +264,14 @@
         cameraEl.setAttribute('position', `0 ${data.camHeight} ${data.camRadius}`);
       }
       
-      setTimeout(() => { updateInfoPanel(data); }, 600);
+      setTimeout(() => { 
+        updateInfoPanel(data); 
+        isAnimating = false;
+      }, 600);
     }
 
     function updateInfoPanel(data) {
       if(data.panelPosition === 'none') return;
-
       document.getElementById('panel-title').innerText = data.title;
       document.getElementById('panel-desc').innerText = data.desc;
       
@@ -252,7 +295,6 @@
         panelContainer.style.right = 'auto'; panelContainer.style.left = '5%';
         panelContainer.style.transform = 'translateY(-50%) perspective(1000px) rotateY(12deg)';
       }
-      
       panelContainer.style.display = 'block';
     }
 
@@ -263,7 +305,6 @@
 </head>
 <body>
 
-  <!-- شاشة البدء -->
   <div id="start-screen">
     <button class="play-btn" onclick="startExperience()">▶</button>
     <h1 class="start-title">معالم مشعر منى مكة المكرمة</h1>
@@ -276,14 +317,13 @@
       <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
     </div>
 
-    <!-- أسهم التنقل السفلية مع الجملة المطلوبة -->
+    <!-- أسهم التنقل (مضبوطة: يمين للخيام، يسار للجمرات) -->
     <div class="nav-arrows-container">
-      <div class="nav-arrow" onclick="goToPrev()">&#10095;</div> 
+      <div class="nav-arrow" onclick="goToRight()" title="مخيمات منى">&#10095;</div> 
       <div class="nav-text">مرر لرؤية المعالم</div>
-      <div class="nav-arrow" onclick="goToNext()">&#10094;</div> 
+      <div class="nav-arrow" onclick="goToLeft()" title="منشأة الجمرات">&#10094;</div> 
     </div>
 
-    <!-- البوب-أب الجانبي -->
     <div id="info-panel-container">
       <div class="info-box">
         <button class="close-btn" onclick="closePanel()">✖</button>
@@ -296,21 +336,21 @@
     </div>
 
     <!-- 
-      1. تم إخفاء زر الـ VR نهائياً (vr-mode-ui="enabled: false")
-      2. تم تفعيل logarithmicDepthBuffer لمنع التآكل والغطس
+      تفعيل الضباب (Fog) لدمج الأرضية مع السماء تماماً وإخفاء خط الأفق.
+      تم إزالة زر الـ VR تماماً.
     -->
-    <a-scene embedded antialias="true" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: false">
+    <a-scene embedded antialias="true" fog="type: exponential; color: #02050d; density: 0.015" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: false">
       
       <a-assets timeout="30000">
         <a-asset-item id="model-jamarat" src="jamaraat.glb"></a-asset-item>
         <a-asset-item id="model-khimaa" src="KHIMAA.glb"></a-asset-item>
-        <a-asset-item id="cairo-font" src="https://fonts.gstatic.com/s/cairo/v28/SLXVc1nY6Hkvangq7b1qXW7-m70cR_g.woff"></a-asset-item>
       </a-assets>
 
-      <a-sky opacity="0"></a-sky>
+      <!-- لون السماء يطابق لون الضباب -->
+      <a-sky color="#02050d"></a-sky>
       
-      <!-- الشبكة (تم تخفيضها قليلاً للأسفل -2 متر لزيادة الأمان ومنع أي تقاطع مع الموديل) -->
-      <a-plane position="0 -2 0" rotation="-90 0 0" width="2000" height="2000" neon-grid></a-plane>
+      <!-- الشبكة -->
+      <a-plane position="0 0 0" rotation="-90 0 0" width="2000" height="2000" neon-grid></a-plane>
 
       <a-light type="ambient" color="#030b1a" intensity="1.8"></a-light>
       <a-light type="spot" color="#0088ff" intensity="3" position="0 80 0" rotation="-90 0 0" angle="70" penumbra="1" distance="200" decay="2"></a-light>
@@ -318,57 +358,32 @@
 
       <a-entity id="models-group">
         
-        <!-- ============================================ -->
-        <!-- 0. مشهد الترحيب النيون (حياكم في معالم مشعر منى) -->
-        <!-- ============================================ -->
+        <!-- مشهد الترحيب النيون (يعمل بدون موديلات خارجية) -->
         <a-entity id="scene-welcome" position="0 0 0" visible="true">
-          <!-- النص الأساسي 3D مفرغ النيون -->
-          <a-entity position="0 15 0" 
-                    animation="property: position; dir: alternate; dur: 2500; loop: true; to: 0 15.5 0">
-             <a-entity troika-text="value: حياكم في معالم\nمشعر منى; 
-                                    font: #cairo-font;
-                                    fontSize: 4;
-                                    align: center;
-                                    color: #00d2ff;
-                                    outlineWidth: 0.05;
-                                    outlineColor: #00d2ff;
-                                    fillOpacity: 0.2;
-                                    lineHeight: 1.2"
-                       material="shader: flat">
-             </a-entity>
-          </a-entity>
-          <!-- أسهم نيون 3D تتحرك لليمين -->
-          <a-entity position="-4 10 0" 
-                    animation="property: position; to: 4 10 0; dur: 2000; easing: linear; loop: true;">
-            <a-entity troika-text="value: >>>>>>>>; font: #cairo-font; fontSize: 2.5; color: #00d2ff; outlineWidth: 0.04; outlineColor: #00d2ff; fillOpacity: 0.2;" material="shader: flat"></a-entity>
-          </a-entity>
+          <!-- النص المضيء -->
+          <a-entity neon-arabic-text="text: حياكم في معالم مشعر منى; color: #00d2ff; size: 80" 
+                    position="0 15 0" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 15.5 0"></a-entity>
+          
+          <!-- الأسهم المضيئة تتحرك لليمين -->
+          <a-entity neon-arabic-text="text: >>>>>>>>; color: #00d2ff; size: 60" 
+                    position="-5 10 0" 
+                    animation="property: position; to: 5 10 0; dur: 2500; easing: linear; loop: true;"></a-entity>
         </a-entity>
 
-        <!-- ============================================ -->
-        <!-- 1. منشأة الجمرات (مرفوعة 10 أمتار عن الأرضية لمنع التآكل) -->
-        <!-- ============================================ -->
-        <a-entity id="model_jamarat" class="scene-model" position="0 10 0" visible="false">
+        <!-- الجمرات (مرفوعة 15 متر للأعلى لمنع الغطس نهائياً) -->
+        <a-entity id="model_jamarat" class="scene-model" position="-40 15 -40" visible="false">
           <a-gltf-model src="#model-jamarat" scale="0.05 0.05 0.05"></a-gltf-model>
-          <a-entity line="start: 0 0 0; end: 0 6 0; color: #ffffff; opacity: 0.4"></a-entity>
-          <a-sphere position="0 6 0" radius="0.2" color="#ffffff" material="shader: flat" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 6.5 0"></a-sphere>
         </a-entity>
 
-        <!-- ============================================ -->
-        <!-- 2. مخيمات منى (مرفوعة 10 أمتار عن الأرضية) -->
-        <!-- ============================================ -->
-        <a-entity id="model_khimaa" class="scene-model" position="0 10 0" visible="false">
+        <!-- الخيام (مرفوعة 15 متر للأعلى لمنع الغطس) -->
+        <a-entity id="model_khimaa" class="scene-model" position="40 15 -40" visible="false">
           <a-gltf-model src="#model-khimaa" scale="5 5 5"></a-gltf-model>
-          <a-entity line="start: 0 0 0; end: 0 6 0; color: #ffffff; opacity: 0.4"></a-entity>
-          <a-sphere position="0 6 0" radius="0.2" color="#ffffff" material="shader: flat" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 6.5 0"></a-sphere>
         </a-entity>
 
       </a-entity>
 
-      <!-- 
-        الكاميرا مضبوطة لعدم قطع المجسمات (near: 0.1) وتدور حول الموديل بسلاسة
-      -->
+      <!-- الكاميرا مضبوطة للزوم السلس وعدم القطع -->
       <a-entity camera="near: 0.1; far: 10000" look-controls="enabled: false" 
                 orbit-controls="target: 0 10 0; minDistance: 5; maxDistance: 150; initialPosition: 0 15 40; 
                                 enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.05; rotateSpeed: 0.5;">
