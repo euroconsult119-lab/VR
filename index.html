@@ -161,7 +161,8 @@
         desc: 'مجمع معماري حديث مصمم لتسهيل حركة الحجاج أثناء رمي الجمرات، يظهر هنا تفصيل المسارات المتعددة.',
         images: 'https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=300',
         camTarget: {x: -100, y: 1, z: -100},
-        camPos: {x: -100, y: 12, z: -65}, // Zoom-in قريب (تغيير Z لتقترب)
+        // 🔴 تعديل الزوم هنا: اقتراب شديد جداً (Z أصبحت -85 بدلاً من -65، و Y انخفضت إلى 8 لتكون أقرب للأرض)
+        camPos: {x: -100, y: 8, z: -85}, 
         panelPosition: 'right' 
       },
       { // 1: الركن الشمالي الشرقي (يمين أعلى)
@@ -169,7 +170,8 @@
         desc: 'مدينة الخيام المطورة، توفر إقامة آمنة ومريحة للحجاج ضمن تخطيط هندسي دقيق لمنطقة المشاعر.',
         images: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=300',
         camTarget: {x: 100, y: 1, z: -100},
-        camPos: {x: 100, y: 12, z: -65}, // Zoom-in قريب (تغيير Z لتقترب)
+        // 🔴 تعديل الزوم هنا: اقتراب شديد جداً للخيام
+        camPos: {x: 100, y: 8, z: -85}, 
         panelPosition: 'left' 
       },
       { // 2: المنتصف
@@ -177,7 +179,8 @@
         desc: 'منطقة تفاعلية مستقبلية تتوسط معالم المشاعر المقدسة لتوزيع الحركة.',
         images: 'https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=300',
         camTarget: {x: 0, y: 1, z: 0},
-        camPos: {x: 0, y: 12, z: 35},
+        // 🔴 تعديل الزوم للمركز
+        camPos: {x: 0, y: 8, z: 15},
         panelPosition: 'right'
       },
       { // 3: الركن الجنوبي الغربي (يسار أسفل)
@@ -185,7 +188,7 @@
         desc: 'محطة مستقبلية: سيتم عرض الموديل هنا لاحقاً.',
         images: '',
         camTarget: {x: -100, y: 1, z: 100},
-        camPos: {x: -100, y: 12, z: 135},
+        camPos: {x: -100, y: 8, z: 115},
         panelPosition: 'right'
       },
       { // 4: الركن الجنوبي الشرقي (يمين أسفل)
@@ -193,7 +196,7 @@
         desc: 'محطة مستقبلية: سيتم عرض الموديل هنا لاحقاً.',
         images: '',
         camTarget: {x: 100, y: 1, z: 100},
-        camPos: {x: 100, y: 12, z: 135},
+        camPos: {x: 100, y: 8, z: 115},
         panelPosition: 'left'
       }
     ];
@@ -432,10 +435,10 @@
       <!-- 
         الكاميرا الافتتاحية: مرفوعة وبعيدة جداً (Z=200, Y=100) 
         لرؤية بانورامية تشمل جميع الموديلات كـ Fit to screen عند بدء الصفحة
-        إعداد near="0.1" far="10000" يحمي الموديلات من القص بسبب مسافة الكاميرا.
+        إعداد near="0.05" يحمي الموديلات من القص بسبب مسافة الكاميرا القريبة جداً أثناء الزوم.
       -->
-      <a-entity camera="near: 0.1; far: 10000" look-controls="enabled: false" 
-                orbit-controls="target: 0 0 0; minDistance: 5; maxDistance: 400; initialPosition: 0 100 200; 
+      <a-entity camera="near: 0.05; far: 10000" look-controls="enabled: false" 
+                orbit-controls="target: 0 0 0; minDistance: 2; maxDistance: 400; initialPosition: 0 100 200; 
                                 enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.05; rotateSpeed: 0.6;">
       </a-entity>
       
