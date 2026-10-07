@@ -11,8 +11,8 @@
     body, html {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      /* خلفية متدرجة ناعمة تتماشى مع الإضاءة العلوية */
-      background: radial-gradient(circle at top, #06193b 0%, #010308 80%);
+      /* خلفية مطابقة لصورة الإضاءة العلوية الزرقاء */
+      background: #010308;
     }
 
     #vr-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -28,10 +28,11 @@
       filter: brightness(0) invert(1); opacity: 0.85;
     }
 
-    /* أسهم التنقل السفلية - تم تصحيح الاتجاهات برمجياً */
+    /* أسهم التنقل - تم إصلاحها */
     .nav-arrows-container {
       position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
       display: flex; gap: 80px; z-index: 100; pointer-events: none;
+      direction: ltr; /* لضمان بقاء السهم الأيمن يميناً والأيسر يساراً */
     }
     .nav-arrow {
       pointer-events: auto;
@@ -41,28 +42,22 @@
       color: #00d2ff; font-size: 22px; font-weight: bold;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: 0.3s; backdrop-filter: blur(5px);
-      box-shadow: 0 0 10px rgba(0, 150, 255, 0.1);
     }
     .nav-arrow:hover { 
       background: rgba(0, 150, 255, 0.2); 
       box-shadow: 0 0 20px rgba(0, 150, 255, 0.5); 
-      transform: scale(1.05); color: #fff; border-color: #00d2ff;
+      transform: scale(1.1); color: #fff; border-color: #00d2ff;
     }
 
-    /* 
-      تصميم البوب-أب الجانبي (Glassmorphism 3D effect) 
-      تم إزالة position الثابت لجعله يتمركز جانبياً بناءً على الكود
-    */
+    /* نافذة البوب-أب الجانبية الزجاجية */
     #info-panel {
       position: absolute; top: 50%; transform: translateY(-50%);
-      width: 380px; /* عرض مناسب للعرض الجانبي */
-      background: rgba(10, 18, 35, 0.65); color: #fff;
+      width: 380px; 
+      background: rgba(8, 15, 28, 0.7); color: #fff;
       padding: 25px; border-radius: 20px; z-index: 100; display: none; 
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 150, 255, 0.15) inset;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 150, 255, 0.1) inset;
       border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
-      border-left: 1px solid rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-      transition: left 0.4s ease, right 0.4s ease; /* لحركة سلسة عند تغيير الاتجاه */
     }
     .close-btn {
       position: absolute; top: 12px; left: 15px; background: none; border: none; 
@@ -73,11 +68,8 @@
       margin: 0 0 12px 0; color: #ffffff; font-size: 22px; font-weight: 600;
       text-shadow: 0 2px 10px rgba(0, 150, 255, 0.4);
     }
-    #panel-desc { 
-      line-height: 1.7; font-size: 14px; margin-bottom: 20px; color: #a0aec0; 
-    }
+    #panel-desc { line-height: 1.7; font-size: 14px; margin-bottom: 20px; color: #a0aec0; }
     
-    /* تصميم كروت الصور بلمسة 3D */
     .gallery-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
     .gallery-container::-webkit-scrollbar { height: 4px; }
     .gallery-container::-webkit-scrollbar-thumb { background: rgba(0,150,255,0.3); border-radius: 4px; }
@@ -91,34 +83,33 @@
   </style>
 
   <script>
-    // تصميم الشبكة الناعمة جداً
+    // رسم الشبكة الناعمة لتلتقط إضاءة الـ SpotLight
     AFRAME.registerComponent('neon-grid', {
       init: function () {
         let canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 512;
         let ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = 'rgba(0, 0, 0, 1)'; 
+        ctx.fillStyle = 'rgba(1, 3, 8, 1)'; // لون الأرضية أسود عميق
         ctx.fillRect(0, 0, 512, 512);
         
-        ctx.strokeStyle = 'rgba(0, 150, 255, 0.25)'; // خطوط رفيعة وناعمة
-        ctx.lineWidth = 1; 
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = "#00d2ff";
+        ctx.strokeStyle = 'rgba(0, 150, 255, 0.15)'; // خطوط زرقاء ناعمة جداً
+        ctx.lineWidth = 1.5; 
         ctx.strokeRect(0, 0, 512, 512);
         
         let texture = new THREE.CanvasTexture(canvas);
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(300, 300); 
+        texture.repeat.set(400, 400); 
         
         let material = new THREE.MeshStandardMaterial({ 
-          map: texture, roughness: 0.8, metalness: 0.1 
+          map: texture, roughness: 0.5, metalness: 0.4 
         });
         this.el.getObject3D('mesh').material = material;
       }
     });
 
+    // بيانات الموديلات والتحكم في موقع النوافذ
     const siteData = [
       {
         id: 'jamarat',
@@ -127,7 +118,7 @@
         images: 'https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=300',
         camTarget: {x: -15, y: 0, z: 0},
         camPos: {x: -15, y: 15, z: 25},
-        panelSide: 'right' // اللوحة تظهر يميناً
+        panelPosition: 'right' // الموديل يسار -> النافذة يمين
       },
       {
         id: 'khimaa',
@@ -136,28 +127,26 @@
         images: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=300',
         camTarget: {x: 15, y: 0, z: 0},
         camPos: {x: 15, y: 15, z: 25},
-        panelSide: 'left' // اللوحة تظهر يساراً
+        panelPosition: 'left' // الموديل يمين -> النافذة يسار
       }
     ];
 
     let currentIndex = 0;
-    let isAnimating = false; // لمنع النقر المتعدد أثناء الحركة
+    let isAnimating = false;
 
-    function goToNext() {
+    // تم إصلاح اتجاهات الأسهم هنا
+    function goToPrev() { // السهم الأيسر يذهب للجمرات (اليسار)
       if(isAnimating) return;
-      // السهم الأيمن ينقلك للموديل التالي
-      currentIndex = (currentIndex + 1) % siteData.length;
+      currentIndex = 0;
       animateCameraToCurrentModel();
     }
 
-    function goToPrev() {
+    function goToNext() { // السهم الأيمن يذهب للخيام (اليمين)
       if(isAnimating) return;
-      // السهم الأيسر ينقلك للموديل السابق
-      currentIndex = (currentIndex - 1 + siteData.length) % siteData.length;
+      currentIndex = 1;
       animateCameraToCurrentModel();
     }
 
-    // حركة الكاميرا السينمائية (Zoom Out -> Move -> Zoom In)
     function animateCameraToCurrentModel() {
       isAnimating = true;
       let data = siteData[currentIndex];
@@ -167,25 +156,23 @@
 
       let currentPos = cameraEl.getAttribute('position');
       
-      // نقطة علوية للزوم أوت
+      // الكاميرا ترتفع وترجع للخلف ثم تهبط (حركة سينمائية)
       let midX = (currentPos.x + data.camPos.x) / 2;
-      let midY = Math.max(currentPos.y, data.camPos.y) + 25; 
+      let midY = Math.max(currentPos.y, data.camPos.y) + 20; 
       let midZ = Math.max(currentPos.z, data.camPos.z) + 15; 
 
-      // الأنيميشن
-      cameraEl.setAttribute('animation__zoomout', `property: position; to: ${midX} ${midY} ${midZ}; dur: 700; easing: easeOutQuad`);
-      cameraEl.setAttribute('animation__target', `property: orbit-controls.target; to: ${data.camTarget.x} ${data.camTarget.y} ${data.camTarget.z}; dur: 1400; easing: easeInOutSine`);
+      cameraEl.setAttribute('animation__zoomout', `property: position; to: ${midX} ${midY} ${midZ}; dur: 800; easing: easeOutQuad`);
+      cameraEl.setAttribute('animation__target', `property: orbit-controls.target; to: ${data.camTarget.x} ${data.camTarget.y} ${data.camTarget.z}; dur: 1600; easing: easeInOutSine`);
 
       setTimeout(() => {
         cameraEl.removeAttribute('animation__zoomout');
-        cameraEl.setAttribute('animation__zoomin', `property: position; to: ${data.camPos.x} ${data.camPos.y} ${data.camPos.z}; dur: 700; easing: easeInQuad`);
-      }, 700);
+        cameraEl.setAttribute('animation__zoomin', `property: position; to: ${data.camPos.x} ${data.camPos.y} ${data.camPos.z}; dur: 800; easing: easeInQuad`);
+      }, 800);
 
       setTimeout(() => {
         cameraEl.removeAttribute('animation__zoomin');
         cameraEl.removeAttribute('animation__target');
         
-        // تجهيز اللوحة
         document.getElementById('panel-title').innerText = data.title;
         document.getElementById('panel-desc').innerText = data.desc;
         let galleryHtml = '';
@@ -196,9 +183,9 @@
         }
         document.getElementById('gallery-container').innerHTML = galleryHtml;
         
-        // تحديد موقع اللوحة بناءً على الموديل
+        // ضبط مكان النافذة (عكس مكان الموديل)
         let panel = document.getElementById('info-panel');
-        if (data.panelSide === 'right') {
+        if (data.panelPosition === 'right') {
           panel.style.left = 'auto';
           panel.style.right = '5%';
         } else {
@@ -208,14 +195,14 @@
         
         panel.style.display = 'block';
         isAnimating = false;
-      }, 1450);
+      }, 1600);
     }
 
     function closePanel() {
       document.getElementById('info-panel').style.display = 'none';
     }
 
-    // تفاعل النقطة العلوية
+    // النقر على النقطة البيضاء 
     AFRAME.registerComponent('hotspot-action', {
       schema: { index: {type: 'number'} },
       init: function () {
@@ -225,7 +212,7 @@
             animateCameraToCurrentModel();
           } else {
             let panel = document.getElementById('info-panel');
-            if (siteData[currentIndex].panelSide === 'right') {
+            if (siteData[currentIndex].panelPosition === 'right') {
               panel.style.left = 'auto'; panel.style.right = '5%';
             } else {
               panel.style.right = 'auto'; panel.style.left = '5%';
@@ -246,13 +233,12 @@
       <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
     </div>
 
-    <!-- أسهم التنقل -->
+    <!-- أسهم التنقل (مضبوطة لتعمل بشكل سليم مع أماكن الموديلات) -->
     <div class="nav-arrows-container">
-      <div class="nav-arrow" onclick="goToNext()">&#10095;</div> 
-      <div class="nav-arrow" onclick="goToPrev()">&#10094;</div> 
+      <div class="nav-arrow" onclick="goToPrev()">&#10094;</div> <!-- يسار: يذهب للجمرات -->
+      <div class="nav-arrow" onclick="goToNext()">&#10095;</div> <!-- يمين: يذهب للخيام -->
     </div>
 
-    <!-- البوب-أب الجانبي -->
     <div id="info-panel">
       <button class="close-btn" onclick="closePanel()">✖</button>
       <h2 id="panel-title">--</h2>
@@ -260,8 +246,7 @@
       <div id="gallery-container" class="gallery-container"></div>
     </div>
 
-    <!-- إعدادات الريندر لمنع الزبزبة: logaritmicDepthBuffer -->
-    <a-scene embedded antialias="true" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: false">
+    <a-scene embedded antialias="true" renderer="colorManagement: true;" vr-mode-ui="enabled: false">
       
       <a-assets timeout="30000">
         <a-asset-item id="model-jamarat" src="jamaraat.glb"></a-asset-item>
@@ -270,62 +255,55 @@
 
       <a-sky opacity="0"></a-sky>
       
-      <!-- الشبكة -->
-      <a-plane position="0 0 0" rotation="-90 0 0" width="2000" height="2000" neon-grid></a-plane>
+      <!-- أرضية الشبكة -->
+      <a-plane position="0 0 0" rotation="-90 0 0" width="2000" height="2000" neon-grid shadow="receive: true"></a-plane>
 
       <!-- 
-        الإضاءة العلوية الناعمة (هالة زرقاء على الأرضية) 
-        تم استبدال الكشاف بـ Point Light ناعم من الأعلى
+        الإضاءة العلوية الناعمة جداً (مطابقة للصورة المرجعية)
+        كشاف SpotLight بفتحة واسعة وحواف ناعمة 100% يخلق بقعة ضوء زرقاء متدرجة في المنتصف
       -->
-      <a-light type="ambient" color="#030b1a" intensity="1.5"></a-light>
-      <a-light type="point" color="#0055ff" intensity="1.2" position="0 60 0" distance="150" decay="2"></a-light>
-      <!-- إضاءة مساعدة خفيفة لإبراز تفاصيل الموديل -->
-      <a-light type="directional" color="#ffffff" intensity="0.4" position="10 30 20"></a-light>
+      <a-light type="ambient" color="#030b1a" intensity="1.8"></a-light>
+      <a-light type="spot" color="#0088ff" intensity="3" position="0 60 0" rotation="-90 0 0" angle="50" penumbra="1" distance="150" decay="2"></a-light>
+      <a-light type="directional" color="#ffffff" intensity="0.6" position="10 20 20" castShadow="true"></a-light>
 
       <a-entity id="models-group">
         
-        <!-- === الموديل الأول: الجمرات === -->
+        <!-- الجمرات (على اليسار) -->
         <a-entity position="-15 0 0">
-          <!-- 🔴 تحكم في حجم الجمرات من هنا -->
-          <a-gltf-model src="#model-jamarat" scale="0.005 0.005 0.005"></a-gltf-model>
+          <a-gltf-model src="#model-jamarat" scale="0.005 0.005 0.005" shadow="cast: true"></a-gltf-model>
           
-          <!-- النقطة البيضاء العلوية التفاعلية -->
-          <a-entity line="start: 0 0.5 0; end: 0 4.5 0; color: #ffffff; opacity: 0.4"></a-entity>
-          <!-- الكرة التفاعلية (شفافة وتعمل كزر) -->
-          <a-sphere class="clickable" position="0 4.5 0" radius="0.4" opacity="0"
-                    hotspot-action="index: 0"></a-sphere>
-          <!-- المظهر المرئي للنقطة البيضاء المضيئة -->
-          <a-sphere position="0 4.5 0" radius="0.15" color="#ffffff" material="shader: flat" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.7 0"
-                    pointer-events="none"></a-sphere>
-          <a-sphere position="0 4.5 0" radius="0.3" color="#ffffff" material="shader: flat; transparent: true; opacity: 0.2"
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.7 0"
-                    pointer-events="none"></a-sphere>
+          <!-- النقطة البيضاء التفاعلية -->
+          <a-entity line="start: 0 0.5 0; end: 0 4 0; color: #ffffff; opacity: 0.5"></a-entity>
+          <!-- الكرة التفاعلية غير المرئية (لتسهيل النقر) -->
+          <a-sphere class="clickable" position="0 4 0" radius="0.6" opacity="0" hotspot-action="index: 0"></a-sphere>
+          <!-- الشكل المرئي للنقطة -->
+          <a-sphere position="0 4 0" radius="0.1" color="#ffffff" material="shader: flat" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.2 0" pointer-events="none"></a-sphere>
         </a-entity>
 
-        <!-- === الموديل الثاني: الخيام === -->
+        <!-- الخيام (على اليمين) -->
         <a-entity position="15 0 0">
-          <!-- 🔴 تم تكبير الخيام. جرب 0.1 أو 1 أو 5 حتى يضبط معك تماماً -->
-          <a-gltf-model src="#model-khimaa" scale="1 1 1"></a-gltf-model>
+          <!-- تكبير الخيام لتكون واضحة -->
+          <a-gltf-model src="#model-khimaa" scale="5 5 5" shadow="cast: true"></a-gltf-model>
           
-          <!-- النقطة البيضاء العلوية التفاعلية -->
-          <a-entity line="start: 0 0.5 0; end: 0 4.5 0; color: #ffffff; opacity: 0.4"></a-entity>
-          <a-sphere class="clickable" position="0 4.5 0" radius="0.4" opacity="0"
-                    hotspot-action="index: 1"></a-sphere>
-          <a-sphere position="0 4.5 0" radius="0.15" color="#ffffff" material="shader: flat" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.7 0"
-                    pointer-events="none"></a-sphere>
-          <a-sphere position="0 4.5 0" radius="0.3" color="#ffffff" material="shader: flat; transparent: true; opacity: 0.2"
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.7 0"
-                    pointer-events="none"></a-sphere>
+          <!-- النقطة البيضاء التفاعلية -->
+          <a-entity line="start: 0 0.5 0; end: 0 4 0; color: #ffffff; opacity: 0.5"></a-entity>
+          <!-- الكرة التفاعلية غير المرئية -->
+          <a-sphere class="clickable" position="0 4 0" radius="0.6" opacity="0" hotspot-action="index: 1"></a-sphere>
+          <!-- الشكل المرئي للنقطة -->
+          <a-sphere position="0 4 0" radius="0.1" color="#ffffff" material="shader: flat" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.2 0" pointer-events="none"></a-sphere>
         </a-entity>
 
       </a-entity>
 
-      <!-- الكاميرا المدارية -->
+      <!-- 
+        حركة الكاميرا المدارية 
+        تم تقليل سرعة الدوران dampingFactor لتكون مرنة وناعمة بالماوس
+      -->
       <a-entity camera look-controls="enabled: false" 
                 orbit-controls="target: -15 0 0; minDistance: 5; maxDistance: 120; initialPosition: -15 15 25; 
-                                enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.08;">
+                                enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.05; rotateSpeed: 0.6; zoomSpeed: 0.8;">
       </a-entity>
       
     </a-scene>
