@@ -269,7 +269,7 @@
       <a-entity id="models-group">
         
         <!-- الجمرات (على اليسار) -->
-        <a-entity position="-15 0 0">
+        <a-entity position="-20 0 0">
           <a-gltf-model src="#model-jamarat" scale="0.05 0.05 0.05" shadow="cast: true"></a-gltf-model>
           
           <!-- النقطة البيضاء التفاعلية -->
@@ -277,7 +277,7 @@
           <!-- الكرة التفاعلية غير المرئية (لتسهيل النقر) -->
           <a-sphere class="clickable" position="0 4 0" radius="0.6" opacity="0" hotspot-action="index: 0"></a-sphere>
           <!-- الشكل المرئي للنقطة -->
-          <a-sphere position="0 4 0" radius="0.1" color="#ffffff" material="shader: flat" 
+          <a-sphere position="0 1 0" radius="0.1" color="#ffffff" material="shader: flat" 
                     animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.2 0" pointer-events="none"></a-sphere>
         </a-entity>
 
@@ -291,7 +291,7 @@
           <!-- الكرة التفاعلية غير المرئية -->
           <a-sphere class="clickable" position="0 4 0" radius="0.6" opacity="0" hotspot-action="index: 1"></a-sphere>
           <!-- الشكل المرئي للنقطة -->
-          <a-sphere position="0 4 0" radius="0.1" color="#ffffff" material="shader: flat" 
+          <a-sphere position="0 1 0" radius="0.1" color="#ffffff" material="shader: flat" 
                     animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 4.2 0" pointer-events="none"></a-sphere>
         </a-entity>
 
