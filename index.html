@@ -319,39 +319,39 @@
 
       <!-- 
         حاوية الموديلات 
-        تم رفع جميع الموديلات في محور (Y) بقيمة 0.5 لتجنب التآكل مع الأرضية 
-        وإبعادها عن بعضها لمسافة أطول (-30 و +30)
+        تم رفع جميع الموديلات في محور (Y) بقيمة 5 لتجنب التآكل مع الأرضية (كما ظهر في الصورة)
+        وإبعادها عن بعضها لمسافة أطول (-50 و +50)
       -->
       <a-entity id="models-group">
         
-        <!-- === الموديل الأول: الجمرات (تم تكبيره لـ 0.02 ورفعه) === -->
-        <a-entity position="-30 0.5 0">
-          <a-gltf-model src="#model-jamarat" scale="0.02 0.02 0.02" shadow="cast: true"></a-gltf-model>
+        <!-- === الموديل الأول: الجمرات (تم تكبيره لـ 0.05 ورفعه) === -->
+        <a-entity position="-50 5 0">
+          <a-gltf-model src="#model-jamarat" scale="0.05 0.05 0.05" shadow="cast: true"></a-gltf-model>
           
-          <a-entity line="start: 0 0.5 0; end: 0 6 0; color: #ffffff; opacity: 0.5"></a-entity>
-          <a-sphere class="clickable" position="0 6 0" radius="0.8" opacity="0" hotspot-action="index: 0"></a-sphere>
-          <a-sphere position="0 6 0" radius="0.15" color="#ffffff" material="shader: flat" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 6.3 0" pointer-events="none"></a-sphere>
+          <a-entity line="start: 0 0.5 0; end: 0 10 0; color: #ffffff; opacity: 0.5"></a-entity>
+          <a-sphere class="clickable" position="0 10 0" radius="1.2" opacity="0" hotspot-action="index: 0"></a-sphere>
+          <a-sphere position="0 10 0" radius="0.25" color="#ffffff" material="shader: flat" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 10.5 0" pointer-events="none"></a-sphere>
         </a-entity>
 
-        <!-- === الموديل الثاني: الخيام (تم تكبيره لـ 5 ورفعه) === -->
-        <a-entity position="30 0.5 0">
+        <!-- === الموديل الثاني: الخيام === -->
+        <a-entity position="50 5 0">
           <a-gltf-model src="#model-khimaa" scale="5 5 5" shadow="cast: true"></a-gltf-model>
           
-          <a-entity line="start: 0 0.5 0; end: 0 6 0; color: #ffffff; opacity: 0.5"></a-entity>
-          <a-sphere class="clickable" position="0 6 0" radius="0.8" opacity="0" hotspot-action="index: 1"></a-sphere>
-          <a-sphere position="0 6 0" radius="0.15" color="#ffffff" material="shader: flat" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 6.3 0" pointer-events="none"></a-sphere>
+          <a-entity line="start: 0 0.5 0; end: 0 10 0; color: #ffffff; opacity: 0.5"></a-entity>
+          <a-sphere class="clickable" position="0 10 0" radius="1.2" opacity="0" hotspot-action="index: 1"></a-sphere>
+          <a-sphere position="0 10 0" radius="0.25" color="#ffffff" material="shader: flat" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 10.5 0" pointer-events="none"></a-sphere>
         </a-entity>
 
       </a-entity>
 
       <!-- 
-        الكاميرا الافتتاحية: مرفوعة وبعيدة جداً (Z=90, Y=40) 
+        الكاميرا الافتتاحية: مرفوعة وبعيدة جداً (Z=150, Y=60) 
         لرؤية بانورامية تشمل جميع الموديلات كـ Fit to screen عند بدء الصفحة
       -->
       <a-entity camera look-controls="enabled: false" 
-                orbit-controls="target: 0 0 0; minDistance: 5; maxDistance: 200; initialPosition: 0 40 90; 
+                orbit-controls="target: 0 0 0; minDistance: 5; maxDistance: 300; initialPosition: 0 60 150; 
                                 enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.05; rotateSpeed: 0.6;">
       </a-entity>
       
