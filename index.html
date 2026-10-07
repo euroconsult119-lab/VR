@@ -2,7 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <title>معالم مشعر منى مكة المكرمة - الواقع الافتراضي</title>
+  <title>منصة المشاعر المقدسة الافتراضية</title>
+  
+  <!-- استدعاء خط Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
   
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
@@ -10,34 +13,35 @@
   <style>
     body, html {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #010308;
+      font-family: 'Cairo', sans-serif; /* تفعيل خط كايرو */
+      background: radial-gradient(circle at top, #06193b 0%, #010308 80%);
     }
 
     #vr-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
-    /* شاشة البدء (Start Screen) */
+    /* شاشة البدء السينمائية */
     #start-screen {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: radial-gradient(circle at center, #06193b 0%, #000000 100%);
+      position: absolute; inset: 0; z-index: 9999;
+      background: radial-gradient(circle at center, #0a1f3d 0%, #010308 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 9999; color: #fff; transition: opacity 0.8s ease;
+      transition: opacity 1s ease;
     }
-    #start-screen h1 {
-      font-size: 38px; margin-bottom: 40px; color: #00d2ff;
-      text-shadow: 0 0 20px rgba(0, 210, 255, 0.6); letter-spacing: 2px;
+    #play-btn {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: rgba(0, 150, 255, 0.1); border: 2px solid #00d2ff;
+      color: #00d2ff; font-size: 40px; cursor: pointer; transition: 0.3s;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 30px rgba(0, 150, 255, 0.3);
+      padding-left: 8px; /* لضبط شكل مثلث البلاي */
     }
-    .play-btn {
-      background: rgba(0, 150, 255, 0.2); border: 2px solid #00d2ff;
-      color: #fff; font-size: 24px; padding: 15px 50px; border-radius: 50px;
-      cursor: pointer; font-weight: bold; transition: 0.4s;
-      box-shadow: 0 0 20px rgba(0, 150, 255, 0.4), inset 0 0 10px rgba(0, 150, 255, 0.2);
-      backdrop-filter: blur(5px);
+    #play-btn:hover { background: #00d2ff; color: #fff; transform: scale(1.1); box-shadow: 0 0 50px rgba(0, 150, 255, 0.6); }
+    #start-screen h1 { 
+      color: #fff; margin-top: 30px; font-weight: 800; font-size: 32px;
+      text-shadow: 0 0 20px rgba(0, 150, 255, 0.6); letter-spacing: 1px;
     }
-    .play-btn:hover {
-      background: rgba(0, 150, 255, 0.5); box-shadow: 0 0 40px rgba(0, 150, 255, 0.8);
-      transform: scale(1.05);
-    }
+
+    /* طبقة واجهة المستخدم (تظهر بعد البدء) */
+    #ui-layer { display: none; }
 
     /* الشعارات */
     .logos-wrapper {
@@ -50,75 +54,72 @@
       filter: brightness(0) invert(1); opacity: 0.9;
     }
 
-    /* أسهم التنقل والنص السفلية */
-    .nav-container {
+    /* أسهم التنقل السفلية */
+    .nav-arrows-container {
       position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-      display: flex; align-items: center; gap: 30px; z-index: 100;
-      background: rgba(0, 0, 0, 0.4); padding: 10px 30px; border-radius: 50px;
-      border: 1px solid rgba(0, 150, 255, 0.2); backdrop-filter: blur(8px);
-    }
-    .nav-text {
-      color: #00d2ff; font-size: 16px; font-weight: bold; letter-spacing: 1px;
+      display: flex; align-items: center; gap: 30px; z-index: 100; pointer-events: none;
+      direction: ltr; /* للحفاظ على ترتيب الأسهم */
     }
     .nav-arrow {
-      pointer-events: auto; width: 45px; height: 45px; border-radius: 50%;
-      background: rgba(6, 12, 24, 0.6); border: 1px solid rgba(0, 150, 255, 0.5);
-      color: #00d2ff; font-size: 20px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px rgba(0, 150, 255, 0.2);
+      pointer-events: auto;
+      width: 55px; height: 55px; border-radius: 50%;
+      background: rgba(6, 12, 24, 0.6); border: 1px solid rgba(0, 150, 255, 0.4);
+      color: #00d2ff; font-size: 24px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.3s; backdrop-filter: blur(8px);
     }
     .nav-arrow:hover { 
-      background: rgba(0, 150, 255, 0.3); transform: scale(1.1); color: #fff;
-      box-shadow: 0 0 20px rgba(0, 150, 255, 0.6);
+      background: rgba(0, 150, 255, 0.3); transform: scale(1.1); color: #fff; border-color: #00d2ff;
+      box-shadow: 0 0 20px rgba(0, 150, 255, 0.5); 
+    }
+    .nav-text {
+      color: #00d2ff; font-weight: 600; font-size: 18px; pointer-events: auto;
+      text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
     }
 
-    /* حاوية النوافذ (تصميم 3D مفصول) */
-    #popups-container {
+    /* حاوية النوافذ الثلاثية الأبعاد (منفصلة للنص والصور) */
+    #panels-container {
       position: absolute; top: 50%; transform: translateY(-50%);
-      width: 400px; z-index: 100; display: none;
-      display: flex; flex-direction: column; gap: 20px; /* الفراغ بين البوب-أب الرئيسي والصور */
+      display: flex; flex-direction: column; gap: 15px; width: 380px; 
+      z-index: 100; display: none; perspective: 1000px; /* لتفعيل التأثير الثلاثي الأبعاد */
+      transition: left 0.5s ease, right 0.5s ease;
+    }
+    
+    .glass-panel {
+      background: rgba(8, 15, 28, 0.7); color: #fff;
+      padding: 25px; border-radius: 20px; position: relative;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 150, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      transform: translateZ(30px); /* بروز اللوحة عن الشاشة لتعطي إحساس الـ 3D */
     }
 
-    /* البوب أب الرئيسي (النص) 3D Style */
-    .info-panel {
-      background: linear-gradient(135deg, rgba(15, 25, 45, 0.85) 0%, rgba(5, 10, 20, 0.95) 100%);
-      color: #fff; padding: 25px; border-radius: 16px;
-      box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.8), -2px -2px 10px rgba(0, 150, 255, 0.3) inset;
-      border: 1px solid rgba(255, 255, 255, 0.1); border-top: 2px solid rgba(0, 150, 255, 0.6);
-      backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-      position: relative;
-    }
     .close-btn {
-      position: absolute; top: 10px; left: 15px; background: none; border: none; 
-      color: #00aaff; font-size: 20px; cursor: pointer; transition: 0.3s;
+      position: absolute; top: 15px; left: 20px; background: none; border: none; 
+      color: rgba(255,255,255,0.5); font-size: 20px; cursor: pointer; transition: 0.3s;
     }
-    .close-btn:hover { color: #fff; transform: scale(1.2); }
+    .close-btn:hover { color: #fff; transform: scale(1.1); }
     #panel-title { 
-      margin: 0 0 10px 0; color: #ffffff; font-size: 22px; font-weight: bold;
-      text-shadow: 0 2px 10px rgba(0, 150, 255, 0.6);
+      margin: 0 0 12px 0; color: #ffffff; font-size: 24px; font-weight: 800;
+      text-shadow: 0 2px 10px rgba(0, 150, 255, 0.5); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 12px;
     }
-    #panel-desc { line-height: 1.7; font-size: 14px; margin: 0; color: #cbd5e1; }
-
-    /* بوب أب الصور المستقل 3D Style */
-    .gallery-panel {
-      background: rgba(10, 15, 30, 0.7); padding: 15px; border-radius: 16px;
-      box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.7), -1px -1px 8px rgba(0, 150, 255, 0.2) inset;
-      border: 1px solid rgba(255, 255, 255, 0.05); border-left: 2px solid rgba(0, 150, 255, 0.5);
-      backdrop-filter: blur(10px);
-    }
-    .gallery-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px; }
-    .gallery-container::-webkit-scrollbar { height: 6px; }
-    .gallery-container::-webkit-scrollbar-thumb { background: rgba(0,150,255,0.4); border-radius: 10px; }
+    #panel-desc { line-height: 1.7; font-size: 15px; margin: 0; color: #cbd5e1; font-weight: 600;}
+    
+    /* نافذة الصور المستقلة */
+    #images-panel { padding: 15px; }
+    .gallery-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+    .gallery-container::-webkit-scrollbar { height: 4px; }
+    .gallery-container::-webkit-scrollbar-thumb { background: rgba(0,150,255,0.4); border-radius: 4px; }
     .gallery-card {
-      height: 100px; min-width: 150px; border-radius: 8px; 
-      border: 2px solid rgba(255,255,255,0.1); overflow: hidden;
-      box-shadow: 0 8px 15px rgba(0,0,0,0.5); transition: 0.3s;
+      height: 100px; min-width: 150px; border-radius: 10px; 
+      border: 1px solid rgba(255,255,255,0.1); overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4); transition: 0.3s; cursor: pointer;
     }
     .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
-    .gallery-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 10px 20px rgba(0, 150, 255, 0.4); border-color: #00d2ff;}
+    .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0, 150, 255, 0.3); }
   </style>
 
   <script>
-    // الشبكة التقنية المضيئة
+    // الشبكة الناعمة 
     AFRAME.registerComponent('neon-grid', {
       init: function () {
         let canvas = document.createElement('canvas');
@@ -128,87 +129,91 @@
         ctx.fillRect(0, 0, 512, 512);
         ctx.strokeStyle = 'rgba(0, 150, 255, 0.2)'; 
         ctx.lineWidth = 1.5; 
-        ctx.shadowBlur = 5; ctx.shadowColor = "#00d2ff";
+        ctx.shadowBlur = 8; ctx.shadowColor = "#00d2ff";
         ctx.strokeRect(0, 0, 512, 512);
+        
         let texture = new THREE.CanvasTexture(canvas);
         texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(400, 400); 
-        let material = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.7, metalness: 0.2 });
+        let material = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.6, metalness: 0.3 });
         this.el.getObject3D('mesh').material = material;
       }
     });
 
-    // وضع الموديلات في الأركان (اليمين 45، واليسار -45)
+    // بيانات الموديلات وتحديد الأركان
     const siteData = [
       {
         id: 'jamarat',
         title: 'منشأة الجمرات',
-        desc: 'تم رفع الموديل لتوضيح مسارات وشوارع التفويج بالكامل. يعتبر المجمع من أهم المشاريع الهندسية لتسهيل حركة الحشود بأمان.',
+        desc: 'مجمع معماري حديث مصمم لتسهيل حركة الحجاج أثناء رمي الجمرات. هذا التصميم يبرز انسيابية التفويج عبر الطوابق المتعددة.',
         images: 'https://images.unsplash.com/photo-1565552643952-b91c28bdf713?w=300,https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=300',
-        camTarget: {x: 45, y: 3, z: -45}, // الركن الأيمن
-        camPos: {x: 45, y: 18, z: -20}, // موقع الكاميرا عند الزوم
-        panelPosition: 'left' // النافذة في اليسار لعدم التغطية
+        camTarget: {x: 35, y: 0, z: -25},  // الركن الأيمن
+        camPos: {x: 35, y: 15, z: 5},
+        panelPosition: 'left' // بما أن الموديل يمين، تظهر النافذة يسار
       },
       {
         id: 'khimaa',
         title: 'مخيمات منى',
-        desc: 'مدينة الخيام المطورة والمضادة للحريق، توفر إقامة آمنة ومريحة للحجاج ضمن تخطيط هندسي دقيق يراعي جغرافية المكان.',
+        desc: 'مدينة الخيام البيضاء المطورة، تم تخطيطها هندسياً لضمان أعلى معايير السلامة وتوفير الراحة لضيوف الرحمن في المشاعر.',
         images: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=300',
-        camTarget: {x: -45, y: 1, z: -45}, // الركن الأيسر
-        camPos: {x: -45, y: 18, z: -20}, 
-        panelPosition: 'right' // النافذة في اليمين
+        camTarget: {x: -35, y: 0, z: -25}, // الركن الأيسر
+        camPos: {x: -35, y: 15, z: 5},
+        panelPosition: 'right' // بما أن الموديل يسار، تظهر النافذة يمين
       }
     ];
 
-    let currentIndex = -1; // -1 يعني المشهد البانورامي العام
+    let currentIndex = 0;
     let isAnimating = false;
 
-    // دالة البدء وإزالة الشاشة السوداء
+    // دالة بدء العرض (شاشة البلاي)
     function startExperience() {
       let startScreen = document.getElementById('start-screen');
       startScreen.style.opacity = '0';
-      setTimeout(() => { startScreen.style.display = 'none'; }, 800);
+      setTimeout(() => {
+        startScreen.style.display = 'none';
+        document.getElementById('ui-layer').style.display = 'block';
+      }, 1000);
+
+      // طيران الكاميرا لعمل (Fit to Screen) ورؤية كل الأركان
+      let cameraEl = document.querySelector('[camera]');
+      cameraEl.setAttribute('animation__start', `property: position; to: 0 45 60; dur: 2500; easing: easeOutQuart`);
+      cameraEl.setAttribute('animation__start_target', `property: orbit-controls.target; to: 0 0 -25; dur: 2500; easing: easeOutQuart`);
     }
 
-    function goToNext() {
+    function goToPrev() { // السهم الأيسر للخيام (الشمال)
       if(isAnimating) return;
-      currentIndex = (currentIndex === -1) ? 0 : (currentIndex + 1) % siteData.length;
+      currentIndex = 1;
       animateCameraToCurrentModel();
     }
 
-    function goToPrev() {
+    function goToNext() { // السهم الأيمن للجمرات (اليمين)
       if(isAnimating) return;
-      currentIndex = (currentIndex === -1) ? 0 : (currentIndex - 1 + siteData.length) % siteData.length;
+      currentIndex = 0;
       animateCameraToCurrentModel();
     }
 
-    // حركة الكاميرا السينمائية المتطورة
     function animateCameraToCurrentModel() {
       isAnimating = true;
       let data = siteData[currentIndex];
       let cameraEl = document.querySelector('[camera]');
       
-      // إغلاق أي نافذة مفتوحة
-      document.getElementById('popups-container').style.display = 'none'; 
+      closePanel(); 
 
       let currentPos = cameraEl.getAttribute('position');
       
-      // نقطة عليا للتراجع (Zoom Out)
+      // حركة الزوم أوت والزوم إن
       let midX = (currentPos.x + data.camPos.x) / 2;
-      let midY = Math.max(currentPos.y, data.camPos.y) + 40; // ارتفاع 40 متر لأعلى
-      let midZ = Math.max(currentPos.z, data.camPos.z) + 30; // تراجع 30 متر للخلف
+      let midY = Math.max(currentPos.y, data.camPos.y) + 30; 
+      let midZ = Math.max(currentPos.z, data.camPos.z) + 30; 
 
-      // 1. Zoom Out & Move
-      cameraEl.setAttribute('animation__zoomout', `property: position; to: ${midX} ${midY} ${midZ}; dur: 1000; easing: easeOutSine`);
+      cameraEl.setAttribute('animation__zoomout', `property: position; to: ${midX} ${midY} ${midZ}; dur: 1000; easing: easeOutQuad`);
       cameraEl.setAttribute('animation__target', `property: orbit-controls.target; to: ${data.camTarget.x} ${data.camTarget.y} ${data.camTarget.z}; dur: 2000; easing: easeInOutSine`);
 
-      // 2. Zoom In
       setTimeout(() => {
         cameraEl.removeAttribute('animation__zoomout');
-        cameraEl.setAttribute('animation__zoomin', `property: position; to: ${data.camPos.x} ${data.camPos.y} ${data.camPos.z}; dur: 1000; easing: easeInSine`);
+        cameraEl.setAttribute('animation__zoomin', `property: position; to: ${data.camPos.x} ${data.camPos.y} ${data.camPos.z}; dur: 1000; easing: easeInQuad`);
       }, 1000);
 
-      // 3. إظهار النوافذ المفصولة الـ 3D
       setTimeout(() => {
         cameraEl.removeAttribute('animation__zoomin');
         cameraEl.removeAttribute('animation__target');
@@ -218,30 +223,28 @@
         let galleryHtml = '';
         if (data.images) {
           data.images.split(',').forEach(img => {
-            galleryHtml += `<div class="gallery-card"><img src="${img.trim()}" alt="صورة توضيحية"></div>`;
+            galleryHtml += `<div class="gallery-card"><img src="${img.trim()}" alt="صور"></div>`;
           });
         }
         document.getElementById('gallery-container').innerHTML = galleryHtml;
         
-        // تحديد موقع النوافذ
-        let popups = document.getElementById('popups-container');
+        let panelsContainer = document.getElementById('panels-container');
         if (data.panelPosition === 'right') {
-          popups.style.left = 'auto'; popups.style.right = '5%';
+          panelsContainer.style.left = 'auto'; panelsContainer.style.right = '5%';
         } else {
-          popups.style.right = 'auto'; popups.style.left = '5%';
+          panelsContainer.style.right = 'auto'; panelsContainer.style.left = '5%';
         }
         
-        popups.style.display = 'flex';
+        panelsContainer.style.display = 'flex';
         isAnimating = false;
-      }, 2050);
+      }, 2000);
     }
 
     function closePanel() {
-      document.getElementById('popups-container').style.display = 'none';
-      currentIndex = -1; // العودة للوضع الحر
+      document.getElementById('panels-container').style.display = 'none';
     }
 
-    // تفاعل النقطة العلوية
+    // ربط النقطة البيضاء بفتح البوب-أب
     AFRAME.registerComponent('hotspot-action', {
       schema: { index: {type: 'number'} },
       init: function () {
@@ -250,8 +253,13 @@
             currentIndex = this.data.index;
             animateCameraToCurrentModel();
           } else {
-             // إظهار النوافذ إذا كان المستخدم بالفعل عند الموديل
-            document.getElementById('popups-container').style.display = 'flex';
+            let panelsContainer = document.getElementById('panels-container');
+            if (siteData[currentIndex].panelPosition === 'right') {
+              panelsContainer.style.left = 'auto'; panelsContainer.style.right = '5%';
+            } else {
+              panelsContainer.style.right = 'auto'; panelsContainer.style.left = '5%';
+            }
+            panelsContainer.style.display = 'flex';
           }
         });
       }
@@ -260,24 +268,103 @@
 </head>
 <body>
 
-  <!-- شاشة البدء (Play Screen) -->
+  <!-- شاشة البدء الكبيرة -->
   <div id="start-screen">
-    <h1>معالم مشعر منى مكة المكرمة</h1>
-    <button class="play-btn" onclick="startExperience()">▶ ابدأ العرض</button>
+    <button id="play-btn" onclick="startExperience()">▶</button>
+    <h1>معالم مشعر منى - مكة المكرمة</h1>
   </div>
 
   <div id="vr-container">
     
-    <div class="logos-wrapper">
-      <img src="https://haj.gov.sa/_next/image?url=https%3A%2F%2Fhaj.gov.sa%2Fs-core%2F-%2Fmedia%2FProject%2FHAJJ%2FHajj-Logos%2FHeader-Logo.svg%3Fiar%3D0%26hash%3DEA30CCD6D55090BA41D3BA548A24E24A&w=256&q=75" alt="وزارة الحج والعمرة">
-      <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
+    <!-- واجهة المستخدم المخفية حتى بدء العرض -->
+    <div id="ui-layer">
+      <div class="logos-wrapper">
+        <img src="https://haj.gov.sa/_next/image?url=https%3A%2F%2Fhaj.gov.sa%2Fs-core%2F-%2Fmedia%2FProject%2FHAJJ%2FHajj-Logos%2FHeader-Logo.svg%3Fiar%3D0%26hash%3DEA30CCD6D55090BA41D3BA548A24E24A&w=256&q=75" alt="وزارة الحج">
+        <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
+      </div>
+
+      <!-- أسهم التنقل وبينها النص -->
+      <div class="nav-arrows-container">
+        <div class="nav-arrow" onclick="goToPrev()">&#10094;</div> 
+        <div class="nav-text">مرر لترى المعالم</div>
+        <div class="nav-arrow" onclick="goToNext()">&#10095;</div> 
+      </div>
+
+      <!-- حاوية البوب-أب المنفصلة (نصوص ثم صور) -->
+      <div id="panels-container">
+        <!-- نافذة النصوص -->
+        <div id="info-panel" class="glass-panel">
+          <button class="close-btn" onclick="closePanel()">✖</button>
+          <h2 id="panel-title">--</h2>
+          <p id="panel-desc">--</p>
+        </div>
+        <!-- نافذة الصور المستقلة -->
+        <div id="images-panel" class="glass-panel">
+          <div id="gallery-container" class="gallery-container"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- أسهم التنقل -->
-    <div class="nav-container">
-      <div class="nav-arrow" onclick="goToPrev()">&#10095;</div> 
-      <span class="nav-text">مرر لترى المعالم</span>
-      <div class="nav-arrow" onclick="goToNext()">&#10094;</div> 
-    </div>
+    <!-- 
+      تفعيل الواقع الافتراضي: vr-mode-ui="enabled: true"
+    -->
+    <a-scene embedded antialias="true" renderer="colorManagement: true;" vr-mode-ui="enabled: true">
+      
+      <a-assets timeout="30000">
+        <a-asset-item id="model-jamarat" src="jamaraat.glb"></a-asset-item>
+        <a-asset-item id="model-khimaa" src="KHIMAA.glb"></a-asset-item>
+      </a-assets>
 
-    <!-- حاوية النوافذ المفص
+      <a-sky opacity="0"></a-sky>
+      
+      <a-plane position="0 0 0" rotation="-90 0 0" width="3000" height="3000" neon-grid></a-plane>
+
+      <a-light type="ambient" color="#030b1a" intensity="1.5"></a-light>
+      <a-light type="spot" color="#0088ff" intensity="3" position="0 80 0" rotation="-90 0 0" angle="60" penumbra="1" distance="200" decay="2"></a-light>
+
+      <!-- حاوية الموديلات والأركان الخمسة -->
+      <a-entity id="models-group">
+        
+        <!-- === الركن الأيمن: الجمرات === -->
+        <!-- تم رفع الموديل عن الأرض (y=0.5) لمنع تآكل القاعدة -->
+        <a-entity position="35 0.5 -25">
+          <!-- تكبير الجمرات أكثر -->
+          <a-gltf-model src="#model-jamarat" scale="0.015 0.015 0.015"></a-gltf-model>
+          
+          <!-- النقطة البيضاء التفاعلية مرفوعة فوق الموديل -->
+          <a-entity line="start: 0 0 0; end: 0 8 0; color: #ffffff; opacity: 0.4"></a-entity>
+          <a-sphere class="clickable" position="0 8 0" radius="1.2" opacity="0" hotspot-action="index: 0"></a-sphere>
+          <a-sphere position="0 8 0" radius="0.25" color="#ffffff" material="shader: flat" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 8.3 0"></a-sphere>
+          <a-sphere position="0 8 0" radius="0.6" color="#ffffff" material="shader: flat; transparent: true; opacity: 0.2"
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 8.3 0"></a-sphere>
+        </a-entity>
+
+        <!-- === الركن الأيسر: الخيام === -->
+        <!-- تم رفع الموديل عن الأرض (y=1) لمنع التآكل -->
+        <a-entity position="-35 1 -25">
+          <!-- تكبير الخيام لدرجة ضخمة جداً -->
+          <a-gltf-model src="#model-khimaa" scale="15 15 15"></a-gltf-model>
+          
+          <a-entity line="start: 0 0 0; end: 0 8 0; color: #ffffff; opacity: 0.4"></a-entity>
+          <a-sphere class="clickable" position="0 8 0" radius="1.2" opacity="0" hotspot-action="index: 1"></a-sphere>
+          <a-sphere position="0 8 0" radius="0.25" color="#ffffff" material="shader: flat" 
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 8.3 0"></a-sphere>
+          <a-sphere position="0 8 0" radius="0.6" color="#ffffff" material="shader: flat; transparent: true; opacity: 0.2"
+                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 8.3 0"></a-sphere>
+        </a-entity>
+
+        <!-- بقية الأركان الثلاثة فارغة ومجهزة لإضافة الموديلات مستقبلاً -->
+
+      </a-entity>
+
+      <!-- الكاميرا المدارية تبدأ من المنتصف قبل الضغط على زر Play -->
+      <a-entity camera look-controls="enabled: false" 
+                orbit-controls="target: 0 0 -25; minDistance: 5; maxDistance: 200; initialPosition: 0 10 0; 
+                                enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.08; rotateSpeed: 0.6;">
+      </a-entity>
+      
+    </a-scene>
+  </div>
+</body>
+</html>
