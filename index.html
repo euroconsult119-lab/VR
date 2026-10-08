@@ -5,7 +5,6 @@
   <title>منصة المشاعر المقدسة الافتراضية</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
-  
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
 
@@ -18,6 +17,7 @@
 
     #vr-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
+    /* شاشة البدء */
     #start-screen {
       position: absolute; inset: 0; z-index: 200;
       background: rgba(2, 5, 10, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -34,11 +34,8 @@
     .play-btn:hover {
       background: #00d2ff; color: #fff; transform: scale(1.1); box-shadow: 0 0 60px rgba(0, 210, 255, 0.8);
     }
-    .start-title {
-      color: #ffffff; font-size: 32px; font-weight: 800; text-shadow: 0 4px 15px rgba(0, 150, 255, 0.6);
-      margin: 0; text-align: center;
-    }
 
+    /* الشعارات */
     .logos-wrapper {
       position: absolute; top: 20px; left: 0; right: 0;
       display: flex; justify-content: space-between; padding: 0 40px;
@@ -49,10 +46,41 @@
       filter: brightness(0) invert(1); opacity: 0.85;
     }
 
+    /* مشهد الترحيب النيون (مبني بـ CSS لتجنب تكسر النصوص) */
+    #neon-welcome {
+      position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center; z-index: 50; display: none; pointer-events: none;
+    }
+    .neon-text {
+      font-size: 80px; font-weight: 800; color: transparent;
+      -webkit-text-stroke: 2px #00d2ff; text-stroke: 2px #00d2ff;
+      text-shadow: 0 0 20px rgba(0, 210, 255, 0.5), 0 0 40px rgba(0, 210, 255, 0.3);
+      margin: 0; padding: 0; line-height: 1.2;
+      animation: float 3s ease-in-out infinite;
+    }
+    .neon-arrows {
+      font-size: 60px; font-weight: 800; color: transparent;
+      -webkit-text-stroke: 2px #00d2ff; text-stroke: 2px #00d2ff;
+      text-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+      margin-top: 20px;
+      animation: moveArrows 2s linear infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+    @keyframes moveArrows {
+      0% { transform: translateX(-30px); }
+      100% { transform: translateX(30px); }
+    }
+
+    /* أسهم التنقل السفلية */
     .nav-arrows-container {
       position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
       display: flex; align-items: center; gap: 30px; z-index: 100; 
-      visibility: hidden; 
+      visibility: hidden; direction: ltr;
     }
     .nav-arrow {
       pointer-events: auto; width: 45px; height: 45px; border-radius: 50%;
@@ -70,9 +98,10 @@
       text-shadow: 0 0 10px rgba(0, 150, 255, 0.5); pointer-events: none;
     }
 
+    /* البوب أب (توسيع العرض لـ 500px) */
     #info-panel-container {
-      position: absolute; top: 50%; width: 500px; z-index: 100; display: none;
-      transform-style: preserve-3d;
+      position: absolute; top: 50%; width: 500px; /* العرض الجديد */
+      z-index: 100; display: none; transform-style: preserve-3d;
     }
     .info-box {
       background: rgba(6, 10, 18, 0.75); color: #fff;
@@ -138,80 +167,43 @@
       }
     });
 
-    // مكون صانع النصوص المفرغة 3D (Neon Outline with Glare)
-    AFRAME.registerComponent('hollow-neon-text', {
-      schema: {
-        text: {type: 'string', default: ''},
-        size: {type: 'number', default: 120},  // حجم الخط ضخم
-        color: {type: 'string', default: '#00d2ff'},
-        width: {type: 'number', default: 60},  // العرض في الـ 3D
-        height: {type: 'number', default: 15}  // الطول في الـ 3D
-      },
+    // مكون حساب المركز أوتوماتيكياً (لحل مشكلة انحراف الكاميرا)
+    AFRAME.registerComponent('auto-center-align', {
       init: function () {
-        let canvas = document.createElement('canvas');
-        // دقة الكانفس عالية جداً للحفاظ على وضوح الخط بعد التكبير
-        canvas.width = 2048; 
-        canvas.height = 512;
-        let ctx = canvas.getContext('2d');
-
-        // لا نقوم بملء الكانفس بأي لون (شفاف تماماً)
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.font = `bold ${this.data.size}px Cairo, sans-serif`;
-
-        // 1. التوهج الخارجي والخط العريض (النيون الأزرق)
-        ctx.shadowColor = this.data.color;
-        ctx.shadowBlur = 40; // توهج واسع
-        ctx.strokeStyle = this.data.color;
-        ctx.lineWidth = 8;
-        ctx.strokeText(this.data.text, canvas.width/2, canvas.height/2);
-
-        // 2. اللمعة الداخلية (قلب النيون الأبيض)
-        ctx.shadowBlur = 10;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2; // خط رفيع وحاد يعطي إحساس اللمعان
-        ctx.strokeText(this.data.text, canvas.width/2, canvas.height/2);
-
-        // تحويله لمجسم 3D
-        let texture = new THREE.CanvasTexture(canvas);
-        let material = new THREE.MeshBasicMaterial({
-          map: texture, transparent: true, alphaTest: 0.05
+        this.el.addEventListener('model-loaded', () => {
+          const obj = this.el.getObject3D('mesh');
+          if (!obj) return;
+          const box = new THREE.Box3().setFromObject(obj);
+          const center = box.getCenter(new THREE.Vector3());
+          
+          this.el.dataset.centerX = center.x;
+          this.el.dataset.centerY = center.y > 0 ? center.y : 5;
+          this.el.dataset.centerZ = center.z;
         });
-        
-        let geometry = new THREE.PlaneGeometry(this.data.width, this.data.height);
-        let mesh = new THREE.Mesh(geometry, material);
-        this.el.setObject3D('mesh', mesh);
       }
     });
 
     const siteData = [
       { 
-        id: 'scene-welcome', title: 'مشهد الترحيب', desc: '', images: '',
-        camRadius: 40, camHeight: 15, targetY: 10, panelPosition: 'none'
+        id: 'scene-welcome', title: '', desc: '', images: '', panelPosition: 'none'
       },
       { 
         id: 'model_jamarat', title: 'منشأة الجمرات',
-        desc: 'تُعد منشأة الجمرات الموقع الذي تُؤدى فيه شعيرة رمي الجمرات الثلاث (الصغرى، والوسطى، والعقبة) بالحصى. صُمم هذا الصرح المعماري بخمسة طوابق ومسارات ذكية باتجاه واحد، لاستيعاب مئات الآلاف من الحجاج في الساعة الواحدة وتأمين حركتهم دون تكدس هنا قلب مشعر منى حيث تتم إدارة وتفويج الحشود الهائلة عبر مسارات دخول وخروج لا تتقاطع..',
-        images: 'https://vid.alarabiya.net/images/2022/07/09/6306caa4-ea67-4b15-b748-44d5540cf7ec/6306caa4-ea67-4b15-b748-44d5540cf7ec.jpg?crop=4:3&width=1200',
-        images: 'https://pbs.twimg.com/media/HJTiNr5WcAAl8z4?format=webp&name=large',
-        images: 'https://mubasher.news/wp-content/uploads/3-753.jpg',
-        images: 'https://cp.slaati.com//wp-content/uploads/2018/08/7ec71df0-a2dd-4039-82fb-68c573b6b664.jpeg',
-        camRadius: 35, camHeight: 25, targetY: 15, panelPosition: 'right'
+        desc: 'تُعد منشأة الجمرات الموقع الذي تُؤدى فيه شعيرة رمي الجمرات الثلاث (الصغرى، والوسطى، والعقبة) بالحصى. صُمم هذا الصرح المعماري بخمسة طوابق ومسارات ذكية باتجاه واحد، لاستيعاب مئات الآلاف من الحجاج في الساعة الواحدة وتأمين حركتهم دون تكدس هنا قلب مشعر منى حيث تتم إدارة وتفويج الحشود الهائلة عبر مسارات دخول وخروج لا تتقاطع.',
+        images: 'https://vid.alarabiya.net/images/2022/07/09/6306caa4-ea67-4b15-b748-44d5540cf7ec/6306caa4-ea67-4b15-b748-44d5540cf7ec.jpg?crop=4:3&width=1200,https://pbs.twimg.com/media/HJTiNr5WcAAl8z4?format=webp&name=large,https://mubasher.news/wp-content/uploads/3-753.jpg,https://cp.slaati.com//wp-content/uploads/2018/08/7ec71df0-a2dd-4039-82fb-68c573b6b664.jpeg',
+        camRadius: 40, camHeight: 18, panelPosition: 'right'
       },
       { 
         id: 'model_khimaa', title: 'مخيمات منى',
-        desc: 'تُعرف منى بـ مدينة الخيام وهي أكبر مدينة خيام في العالم. يغطي الوادي خيام مطورة مصنوعة من الألياف الزجاجية المقاومة للحريق (التفلون)، ومزودة بأنظمة تكييف متطورة، لضمان أعلى معايير السلامة والراحة لملايين الحجاج أثناء إقامتهم..',
-        images: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUUvqndurt7_k0op_AP_8Bn3ztxms1D3Ao4nJqWntuck9wWLKQKNgz9tE&s=10',
-        images: 'https://media.almashhad.com/twitter/1687144283906_DHBmm.webp',
-        images: 'https://img.youm7.com/ArticleImgs/2017/8/29/53467-%D9%85%D8%AE%D9%8A%D9%85%D8%A7%D8%AA-%D9%85%D9%86%D9%89.jpg',
-        images: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZFXJxeM2TYDudOUYIyEUasHvYV2ruH93LONqowv_IAgWHb8taft84H1s&s=10',
-        
-        camRadius: 40, camHeight: 25, targetY: 15, panelPosition: 'left'
+        desc: 'تُعرف منى بـ مدينة الخيام وهي أكبر مدينة خيام في العالم. يغطي الوادي خيام مطورة مصنوعة من الألياف الزجاجية المقاومة للحريق (التفلون)، ومزودة بأنظمة تكييف متطورة، لضمان أعلى معايير السلامة والراحة لملايين الحجاج أثناء إقامتهم.',
+        images: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUUvqndurt7_k0op_AP_8Bn3ztxms1D3Ao4nJqWntuck9wWLKQKNgz9tE&s=10,https://media.almashhad.com/twitter/1687144283906_DHBmm.webp,https://img.youm7.com/ArticleImgs/2017/8/29/53467-%D9%85%D8%AE%D9%8A%D9%85%D8%A7%D8%AA-%D9%85%D9%86%D9%89.jpg,https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZFXJxeM2TYDudOUYIyEUasHvYV2ruH93LONqowv_IAgWHb8taft84H1s&s=10',
+        camRadius: 50, camHeight: 25, panelPosition: 'left'
       }
     ];
 
     let currentIndex = 0;
     let isStarted = false;
+    let isAnimating = false;
 
     function startExperience() {
       let screen = document.getElementById('start-screen');
@@ -219,9 +211,24 @@
       setTimeout(() => { 
         screen.style.display = 'none'; 
         document.querySelector('.nav-arrows-container').style.visibility = 'visible';
+        document.getElementById('neon-welcome').style.display = 'block'; // إظهار الترحيب
+        
+        let vrBtn = document.querySelector('.a-enter-vr');
+        if(vrBtn) vrBtn.style.display = 'block';
+
         isStarted = true;
       }, 800);
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      let checkVR = setInterval(() => {
+        let vrBtn = document.querySelector('.a-enter-vr');
+        if(vrBtn) {
+          vrBtn.style.display = 'none';
+          clearInterval(checkVR);
+        }
+      }, 100);
+    });
 
     function goToRight() {
       if(!isStarted || isAnimating) return;
@@ -235,26 +242,29 @@
       showCurrentModel();
     }
 
-    let isAnimating = false;
     function showCurrentModel() {
       isAnimating = true;
       let data = siteData[currentIndex];
       closePanel();
 
-      document.getElementById('scene-welcome').setAttribute('visible', 'false');
+      let neonWelcome = document.getElementById('neon-welcome');
+      if (currentIndex === 0) {
+          neonWelcome.style.display = 'block';
+      } else {
+          neonWelcome.style.display = 'none';
+      }
+
       let allModels = document.querySelectorAll('.scene-model');
       allModels.forEach(model => {
         model.setAttribute('visible', 'false');
-        model.classList.remove('clickable');
       });
 
       let cameraEl = document.querySelector('[camera]');
       let orbit = cameraEl.components['orbit-controls'];
 
       if(currentIndex === 0) {
-        document.getElementById('scene-welcome').setAttribute('visible', 'true');
-        orbit.target.set(0, data.targetY, 0);
-        cameraEl.setAttribute('position', `0 ${data.camHeight} ${data.camRadius}`);
+        orbit.target.set(0, 10, 0);
+        cameraEl.setAttribute('position', '0 15 40');
         isAnimating = false;
         return;
       }
@@ -262,14 +272,29 @@
       let currentModelEl = document.getElementById(data.id);
       if(currentModelEl) {
         currentModelEl.setAttribute('visible', 'true');
-        orbit.target.set(0, data.targetY, 0); 
-        cameraEl.setAttribute('position', `0 ${data.camHeight} ${data.camRadius}`);
+        
+        // جلب المركز الحقيقي للموديل
+        let cx = parseFloat(currentModelEl.dataset.centerX) || 0;
+        let cy = parseFloat(currentModelEl.dataset.centerY) || 5;
+        let cz = parseFloat(currentModelEl.dataset.centerZ) || 0;
+
+        // حركة الكاميرا الانسيابية (Morph Effect)
+        let currentPos = cameraEl.getAttribute('position');
+        cameraEl.setAttribute('animation__zoomout', `property: position; to: ${cx} ${data.camHeight + 30} ${cz + data.camRadius + 30}; dur: 1200; easing: easeInOutCubic`);
+        cameraEl.setAttribute('animation__target', `property: orbit-controls.target; to: ${cx} ${cy} ${cz}; dur: 1800; easing: easeInOutCubic`);
+
+        setTimeout(() => {
+          cameraEl.removeAttribute('animation__zoomout');
+          cameraEl.setAttribute('animation__zoomin', `property: position; to: ${cx} ${data.camHeight} ${cz + data.camRadius}; dur: 1200; easing: easeInOutCubic`);
+        }, 1200);
+
+        setTimeout(() => {
+          cameraEl.removeAttribute('animation__zoomin');
+          cameraEl.removeAttribute('animation__target');
+          updateInfoPanel(data); 
+          isAnimating = false;
+        }, 2500);
       }
-      
-      setTimeout(() => { 
-        updateInfoPanel(data); 
-        isAnimating = false;
-      }, 600);
     }
 
     function updateInfoPanel(data) {
@@ -292,10 +317,10 @@
       let panelContainer = document.getElementById('info-panel-container');
       if (data.panelPosition === 'right') {
         panelContainer.style.left = 'auto'; panelContainer.style.right = '5%';
-        panelContainer.style.transform = 'translateY(-50%) perspective(1000px) rotateY(-12deg)';
+        panelContainer.style.transform = 'translateY(-50%) perspective(1000px) rotateY(-8deg)';
       } else {
         panelContainer.style.right = 'auto'; panelContainer.style.left = '5%';
-        panelContainer.style.transform = 'translateY(-50%) perspective(1000px) rotateY(12deg)';
+        panelContainer.style.transform = 'translateY(-50%) perspective(1000px) rotateY(8deg)';
       }
       panelContainer.style.display = 'block';
     }
@@ -312,6 +337,12 @@
     <h1 class="start-title">معالم مشعر منى مكة المكرمة</h1>
   </div>
 
+  <!-- واجهة HTML للترحيب النيون -->
+  <div id="neon-welcome">
+    <h1 class="neon-text">حياكم في معالم<br>مشعر منى</h1>
+    <div class="neon-arrows">>>>>>>>></div>
+  </div>
+
   <div id="vr-container">
     
     <div class="logos-wrapper">
@@ -319,11 +350,11 @@
       <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
     </div>
 
-    <!-- أسهم التنقل السفلية -->
+    <!-- أسهم التنقل مطابقة للصورة -->
     <div class="nav-arrows-container">
-      <div class="nav-arrow" onclick="goToRight()" title="مخيمات منى">&#10094;</div> 
+      <div class="nav-arrow" onclick="goToLeft()" title="منشأة الجمرات">&#10094;</div>
       <div class="nav-text">مرر لرؤية المعالم</div>
-      <div class="nav-arrow" onclick="goToLeft()" title="منشأة الجمرات">&#10095;</div> 
+      <div class="nav-arrow" onclick="goToRight()" title="مخيمات منى">&#10095;</div> 
     </div>
 
     <div id="info-panel-container">
@@ -337,26 +368,17 @@
       </div>
     </div>
 
-    <!-- 
-      تم إزالة الضباب تماماً 
-    -->
-    <a-scene embedded antialias="true" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: false">
+    <a-scene embedded antialias="true" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: true">
       
       <a-assets timeout="30000">
         <a-asset-item id="model-jamarat" src="jamaraat.glb"></a-asset-item>
         <a-asset-item id="model-khimaa" src="KHIMAA.glb"></a-asset-item>
       </a-assets>
 
-      <!-- لون السماء مطابق لأطراف الشبكة لتندمج بدون ضباب -->
       <a-sky color="#02050d"></a-sky>
       
-      <!-- الشبكة مساحتها شاسعة لمنع رؤية حوافها المقطوعة -->
-      <a-plane position="0 0 0" rotation="-90 0 0" width="4000" height="4000" neon-grid></a-plane>
+      <a-plane position="0 -5 0" rotation="-90 0 0" width="4000" height="4000" neon-grid></a-plane>
 
-      <!-- 
-        الإضاءة الزرقاء الناعمة المعوضة عن الضباب 
-        Ambient أزرق داكن + Point أزرق سماوي يغمر المنتصف + Spot من الأعلى
-      -->
       <a-light type="ambient" color="#051535" intensity="2.5"></a-light>
       <a-light type="point" color="#00d2ff" intensity="1.5" position="0 20 0" distance="150" decay="2"></a-light>
       <a-light type="spot" color="#0088ff" intensity="3.5" position="0 80 0" rotation="-90 0 0" angle="75" penumbra="1" distance="300" decay="2"></a-light>
@@ -364,26 +386,13 @@
 
       <a-entity id="models-group">
         
-        <!-- مشهد الترحيب النيون (مفرغ مع لمعة) -->
-        <a-entity id="scene-welcome" position="0 0 0" visible="true">
-          <!-- النص الأساسي المفرغ 3x أضعاف -->
-          <a-entity hollow-neon-text="text: حياكم في معالم مشعر منى; color: #00d2ff; size: 160; width: 60; height: 15" 
-                    position="0 15 0" 
-                    animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 16 0"></a-entity>
-          
-          <!-- الأسهم المفرغة تتحرك لليمين بنسبة وتناسب مع النص -->
-          <a-entity hollow-neon-text="text: >>>>>>>>>>>; color: #00d2ff; size: 120; width: 50; height: 12" 
-                    position="-8 8 0" 
-                    animation="property: position; to: 8 8 0; dur: 2500; easing: linear; loop: true;"></a-entity>
-        </a-entity>
-
         <!-- الجمرات -->
-        <a-entity id="model_jamarat" class="scene-model" position="-40 15 -40" visible="false">
+        <a-entity id="model_jamarat" class="scene-model" position="-40 10 -40" visible="false" auto-center-align>
           <a-gltf-model src="#model-jamarat" scale="0.05 0.05 0.05"></a-gltf-model>
         </a-entity>
 
         <!-- الخيام -->
-        <a-entity id="model_khimaa" class="scene-model" position="40 15 -40" visible="false">
+        <a-entity id="model_khimaa" class="scene-model" position="40 10 -40" visible="false" auto-center-align>
           <a-gltf-model src="#model-khimaa" scale="5 5 5"></a-gltf-model>
         </a-entity>
 
