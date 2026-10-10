@@ -51,36 +51,6 @@
       filter: brightness(0) invert(1); opacity: 0.85;
     }
 
-    /* --- النص الترحيبي والأسهم العلوية --- */
-    #neon-welcome {
-      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-      text-align: center; z-index: 90; display: none; pointer-events: none;
-    }
-    .neon-text {
-      font-size: 80px; font-weight: 800; margin: 0; line-height: 1.1;
-      color: transparent; 
-      -webkit-text-stroke: 2px #00d2ff; 
-      text-shadow: 0 0 20px rgba(0, 210, 255, 0.6), 0 0 40px rgba(0, 210, 255, 0.4);
-      animation: float 4s ease-in-out infinite;
-    }
-    .neon-arrows-top {
-      font-size: 60px; font-weight: 800; margin-top: 20px; letter-spacing: 5px;
-      color: transparent; 
-      -webkit-text-stroke: 2px #00d2ff; 
-      text-shadow: 0 0 15px rgba(0, 210, 255, 0.8);
-      animation: slideArrows 2s linear infinite;
-    }
-
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-15px); }
-      100% { transform: translateY(0px); }
-    }
-    @keyframes slideArrows {
-      0% { transform: translateX(-40px); }
-      100% { transform: translateX(40px); }
-    }
-
     /* --- أسهم التنقل السفلية --- */
     .nav-arrows-container {
       position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -171,6 +141,7 @@
   </style>
 
   <script>
+    // 1. مكون الشبكة 
     AFRAME.registerComponent('neon-grid', {
       init: function () {
         let canvas = document.createElement('canvas');
@@ -197,6 +168,48 @@
       }
     });
 
+    // 2. مكون النص النيون الأصلي والواضح
+    AFRAME.registerComponent('hollow-neon-text', {
+      schema: {
+        text: {type: 'string', default: ''},
+        size: {type: 'number', default: 120},
+        color: {type: 'string', default: '#00d2ff'},
+        width: {type: 'number', default: 60},
+        height: {type: 'number', default: 15}
+      },
+      init: function () {
+        let canvas = document.createElement('canvas');
+        canvas.width = 2048; canvas.height = 512;
+        let ctx = canvas.getContext('2d');
+
+        let texture = new THREE.CanvasTexture(canvas);
+        let material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.05 });
+        let geometry = new THREE.PlaneGeometry(this.data.width, this.data.height);
+        let mesh = new THREE.Mesh(geometry, material);
+        this.el.setObject3D('mesh', mesh);
+
+        document.fonts.ready.then(() => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.font = `bold ${this.data.size}px Cairo, sans-serif`;
+
+          ctx.shadowColor = this.data.color;
+          ctx.shadowBlur = 40;
+          ctx.strokeStyle = this.data.color;
+          ctx.lineWidth = 8;
+          ctx.strokeText(this.data.text, canvas.width/2, canvas.height/2);
+
+          ctx.shadowBlur = 10;
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.strokeText(this.data.text, canvas.width/2, canvas.height/2);
+
+          texture.needsUpdate = true;
+        });
+      }
+    });
+
+    // 3. البيانات مع النقل اليمين لجميع البوب-أب
     const siteData = [
       { 
         id: 'scene-welcome', title: '', desc: '', images: '', panelPosition: 'none', 
@@ -209,7 +222,7 @@
         images: 'https://vid.alarabiya.net/images/2022/07/09/6306caa4-ea67-4b15-b748-44d5540cf7ec/6306caa4-ea67-4b15-b748-44d5540cf7ec.jpg?crop=4:3&width=1200,https://pbs.twimg.com/media/HJTiNr5WcAAl8z4?format=webp&name=large,https://mubasher.news/wp-content/uploads/3-753.jpg,https://cp.slaati.com//wp-content/uploads/2018/08/7ec71df0-a2dd-4039-82fb-68c573b6b664.jpeg',
         camRadius: 50, 
         camHeight: 25, 
-        panelPosition: 'right', // الجمرات على اليسار، النافذة على اليمين
+        panelPosition: 'right',
         offsetX: 0 
       },
       { 
@@ -219,7 +232,7 @@
         images: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUUvqndurt7_k0op_AP_8Bn3ztxms1D3Ao4nJqWntuck9wWLKQKNgz9tE&s=10,https://media.almashhad.com/twitter/1687144283906_DHBmm.webp,https://img.youm7.com/ArticleImgs/2017/8/29/53467-%D9%85%D8%AE%D9%8A%D9%85%D8%A7%D8%AA-%D9%85%D9%86%D9%89.jpg,https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZFXJxeM2TYDudOUYIyEUasHvYV2ruH93LONqowv_IAgWHb8taft84H1s&s=10',
         camRadius: 40, 
         camHeight: 20, 
-        panelPosition: 'left', // الخيام على اليمين، النافذة على اليسار
+        panelPosition: 'right', // 🔴 تم تعديل البوب-أب للخيام ليكون في اليمين دائماً
         offsetX: -40 
       }
     ];
@@ -235,9 +248,8 @@
       setTimeout(() => { 
         screen.style.display = 'none'; 
         document.querySelector('.nav-arrows-container').style.visibility = 'visible';
-        document.getElementById('neon-welcome').style.display = 'block';
         
-        // إظهار زر الـ VR فقط بعد الضغط على Start
+        // إظهار زر الـ VR الافتراضي
         let vrBtn = document.querySelector('.a-enter-vr');
         if(vrBtn) vrBtn.style.display = 'block';
 
@@ -245,17 +257,7 @@
       }, 800);
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      // إخفاء زر الـ VR المزعج في البداية
-      let checkVR = setInterval(() => {
-        let vrBtn = document.querySelector('.a-enter-vr');
-        if(vrBtn) {
-          vrBtn.style.display = 'none';
-          clearInterval(checkVR);
-        }
-      }, 100);
-    });
-
+    // التنقل الدائري اللانهائي (Loop) بين جميع العناصر
     function goToRight() {
       if(!isStarted || isAnimating) return;
       currentIndex = (currentIndex + 1) % siteData.length;
@@ -268,6 +270,7 @@
       showCurrentModel();
     }
 
+    // حركة Fade الانسيابية وتبديل الموديلات
     function showCurrentModel() {
       isAnimating = true;
       let data = siteData[currentIndex];
@@ -277,21 +280,20 @@
       fade.style.opacity = '1'; 
 
       setTimeout(() => {
+        // إخفاء كل العناصر
         document.getElementById('scene-welcome').setAttribute('visible', 'false');
-        let neonWelcome = document.getElementById('neon-welcome');
-        if (currentIndex === 0) neonWelcome.style.display = 'block';
-        else neonWelcome.style.display = 'none';
-
         document.querySelectorAll('.scene-model').forEach(model => model.setAttribute('visible', 'false'));
 
         let cameraEl = document.querySelector('[camera]');
         let orbit = cameraEl.components['orbit-controls'];
 
         if(currentIndex === 0) {
+          // العودة للترحيب
           document.getElementById('scene-welcome').setAttribute('visible', 'true');
           orbit.target.set(0, 10, 0);
           cameraEl.setAttribute('position', `0 ${data.camHeight} ${data.camRadius}`);
         } else {
+          // إظهار الموديل الجديد
           let currentModelEl = document.getElementById(data.id);
           if(currentModelEl) {
             currentModelEl.setAttribute('visible', 'true');
@@ -302,6 +304,7 @@
           }
         }
 
+        // إزالة تأثير الـ Fade
         fade.style.opacity = '0';
 
         setTimeout(() => {
@@ -347,16 +350,29 @@
       document.getElementById('viewer-img').src = src;
       document.getElementById('image-viewer').style.display = 'flex';
     }
+    
     function closeImageViewer(e) {
       if (e) e.stopPropagation();
       document.getElementById('image-viewer').style.display = 'none';
       document.getElementById('viewer-img').src = '';
     }
 
+    // إخفاء زر الـ VR تلقائياً قبل الـ Play
+    document.addEventListener("DOMContentLoaded", () => {
+      let checkVR = setInterval(() => {
+        let vrBtn = document.querySelector('.a-enter-vr');
+        if(vrBtn) {
+          vrBtn.style.display = 'none';
+          clearInterval(checkVR);
+        }
+      }, 100);
+    });
+
   </script>
 </head>
 <body>
 
+  <!-- الحاوية الرئيسية التي تتضمن كل شيء وسيتم تكبيرها -->
   <div id="vr-container">
       
       <!-- شاشة البدء -->
@@ -379,12 +395,7 @@
         <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
       </div>
 
-      <!-- الترحيب النيون -->
-      <div id="neon-welcome">
-        <h1 class="neon-text">حياكم في معالم<br>مشعر منى</h1>
-        <div class="neon-arrows-top"><<<<<<<<<<</div>
-      </div>
-
+      <!-- أسهم التنقل (يمين/يسار) -->
       <div class="nav-arrows-container">
         <div class="nav-arrow" onclick="goToRight()" title="التالي">&#10094;</div> 
         <div class="nav-text">مرر لرؤية المعالم</div>
@@ -402,6 +413,10 @@
         </div>
       </div>
 
+      <!-- 
+        الـ Scene الخاص بـ A-Frame:
+        تفعيل vr-mode-ui لعرض المشهد عبر نظارات الـ VR
+      -->
       <a-scene embedded antialias="true" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: true">
         
         <a-assets timeout="30000">
@@ -419,13 +434,23 @@
 
         <a-entity id="models-group">
           
+          <!-- الترحيب النيون -->
           <a-entity id="scene-welcome" position="0 0 0" visible="true">
+            <a-entity hollow-neon-text="text: حياكم في معالم مشعر منى; color: #00d2ff; size: 160; width: 60; height: 15" 
+                      position="0 15 0" 
+                      animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 16 0"></a-entity>
+            
+            <a-entity hollow-neon-text="text: <<<<<<<<<<; color: #00d2ff; size: 120; width: 50; height: 12" 
+                      position="5 8 0" 
+                      animation="property: position; to: -5 8 0; dur: 2500; easing: linear; loop: true;"></a-entity>
           </a-entity>
 
+          <!-- الجمرات -->
           <a-entity id="model_jamarat" class="scene-model" position="0 10 0" visible="false">
             <a-gltf-model src="#model-jamarat" scale="0.05 0.05 0.05"></a-gltf-model>
           </a-entity>
 
+          <!-- الخيام (النافذة الخاصة بها تظهر في اليمين دائماً بناءً على الإعدادات) -->
           <a-entity id="model_khimaa" class="scene-model" position="0 10 0" visible="false">
             <a-gltf-model src="#model-khimaa" scale="5 5 5"></a-gltf-model>
           </a-entity>
