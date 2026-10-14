@@ -12,15 +12,14 @@
     body, html {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
       font-family: 'Cairo', sans-serif;
-      background: #02050d;
+      background: #000000;
     }
 
     #vr-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
-    /* --- شاشة البداية --- */
     #start-screen {
       position: absolute; inset: 0; z-index: 200;
-      background: rgba(2, 5, 10, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      background: rgba(0, 2, 8, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       transition: opacity 0.8s ease;
     }
@@ -40,7 +39,6 @@
       margin: 0; text-align: center;
     }
 
-    /* --- الشعارات --- */
     .logos-wrapper {
       position: absolute; top: 20px; left: 0; right: 0;
       display: flex; justify-content: space-between; padding: 0 40px;
@@ -51,7 +49,6 @@
       filter: brightness(0) invert(1); opacity: 0.85;
     }
 
-    /* --- أسهم التنقل السفلية --- */
     .nav-arrows-container {
       position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
       display: flex; align-items: center; gap: 30px; z-index: 100; 
@@ -73,7 +70,6 @@
       text-shadow: 0 0 10px rgba(0, 150, 255, 0.5); pointer-events: none;
     }
 
-    /* --- النافذة الجانبية (البوب أب) --- */
     #info-panel-container {
       position: absolute; top: 50%; width: 500px; 
       z-index: 100; display: none; transform-style: preserve-3d;
@@ -114,7 +110,6 @@
     .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
     .gallery-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0, 150, 255, 0.4); }
 
-    /* --- عارض الصور المكبرة --- */
     #image-viewer {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(2, 5, 13, 0.95); backdrop-filter: blur(10px);
@@ -133,24 +128,81 @@
     }
     .close-viewer-btn:hover { background: #00d2ff; color: #fff; transform: scale(1.1); box-shadow: 0 0 20px rgba(0, 150, 255, 0.5); }
 
-    /* --- تأثير Fade الانسيابي --- */
     #fade-overlay {
-      position: absolute; inset: 0; background: #02050d; opacity: 0;
+      position: absolute; inset: 0; background: #000208; opacity: 0;
       z-index: 150; pointer-events: none; transition: opacity 0.5s ease-in-out;
     }
   </style>
 
   <script>
-    // 1. مكون الشبكة 
+    AFRAME.registerComponent('gradient-sky', {
+      init: function () {
+        var vertexShader = `
+          varying vec3 vWorldPosition;
+          void main() {
+            vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+          }
+        `;
+        var fragmentShader = `
+          varying vec3 vWorldPosition;
+          void main() {
+            float h = normalize( vWorldPosition ).y;
+            vec3 bottomColor = vec3(0.0, 0.05, 0.15); 
+            vec3 topColor = vec3(0.0, 0.0, 0.0); 
+            float mixFactor = max(0.0, h);
+            gl_FragColor = vec4( mix(bottomColor, topColor, mixFactor), 1.0 );
+          }
+        `;
+        var material = new THREE.ShaderMaterial({
+          vertexShader: vertexShader,
+          fragmentShader: fragmentShader,
+          side: THREE.BackSide
+        });
+        var geometry = new THREE.SphereGeometry(4000, 32, 15);
+        var mesh = new THREE.Mesh(geometry, material);
+        this.el.setObject3D('mesh', mesh);
+      }
+    });
+
+    AFRAME.registerComponent('star-system', {
+      schema: {
+        count: {type: 'number', default: 2500},
+        radius: {type: 'number', default: 1000}
+      },
+      init: function () {
+        let geometry = new THREE.BufferGeometry();
+        let vertices = [];
+        for (let i = 0; i < this.data.count; i++) {
+          let x = (Math.random() - 0.5) * 2 * this.data.radius;
+          let y = (Math.random() - 0.5) * 2 * this.data.radius;
+          let z = (Math.random() - 0.5) * 2 * this.data.radius;
+          if (Math.sqrt(x*x + y*y + z*z) < 200) continue;
+          vertices.push(x, y, z);
+        }
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        let material = new THREE.PointsMaterial({color: 0xffffff, size: 1.5, transparent: true, opacity: 0.8});
+        this.stars = new THREE.Points(geometry, material);
+        this.el.setObject3D('mesh', this.stars);
+      },
+      tick: function (time, delta) {
+        if(this.stars) {
+          this.stars.rotation.y += 0.00005 * delta;
+          this.stars.rotation.x += 0.00002 * delta;
+        }
+      }
+    });
+
     AFRAME.registerComponent('neon-grid', {
       init: function () {
         let canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 512;
         let ctx = canvas.getContext('2d');
-        ctx.fillStyle = 'rgba(2, 5, 13, 1)'; 
+        ctx.fillStyle = 'rgba(0, 2, 8, 1)'; 
         ctx.fillRect(0, 0, 512, 512);
         
-        ctx.strokeStyle = 'rgba(0, 150, 255, 0.2)'; 
+        ctx.strokeStyle = 'rgba(0, 150, 255, 0.15)'; 
         ctx.lineWidth = 1.5; 
         ctx.shadowBlur = 5;
         ctx.shadowColor = "#00d2ff";
@@ -168,25 +220,21 @@
       }
     });
 
-    // 2. مكون النص النيون 3D (معالج ضد التكسير بتقنية الـ Punch-out)
     AFRAME.registerComponent('hollow-neon-text', {
       schema: {
         text: {type: 'string', default: ''},
         size: {type: 'number', default: 120},
         color: {type: 'string', default: '#00d2ff'},
-        width: {type: 'number', default: 120}, // عرض ضخم
+        width: {type: 'number', default: 120},
         height: {type: 'number', default: 15}
       },
       init: function () {
         let canvas = document.createElement('canvas');
-        // عرض ضخم (4096) لتجنب انضغاط النصوص ووضعها في سطر واحد
-        canvas.width = 4096; 
-        canvas.height = 512;
+        canvas.width = 4096; canvas.height = 512;
         let ctx = canvas.getContext('2d');
 
         let texture = new THREE.CanvasTexture(canvas);
         texture.anisotropy = 16;
-        // depthWrite: false تمنع تقاطع الشفافية مع الشبكة الخلفية
         let material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
         let geometry = new THREE.PlaneGeometry(this.data.width, this.data.height);
         let mesh = new THREE.Mesh(geometry, material);
@@ -200,67 +248,71 @@
           ctx.font = `bold ${this.data.size}px Cairo, sans-serif`;
           ctx.lineJoin = "round";
 
-          // الخطوة 1: رسم إطار النيون المتوهج
           ctx.shadowColor = this.data.color;
           ctx.shadowBlur = 40;
           ctx.strokeStyle = this.data.color;
           ctx.lineWidth = 14;
           ctx.strokeText(this.data.text, canvas.width/2, canvas.height/2);
 
-          // الخطوة 2: مسح قلب الحروف تماماً لعمل التجويف (يمنع التقاطعات المزعجة في العربي)
           ctx.shadowBlur = 0;
           ctx.globalCompositeOperation = 'destination-out';
           ctx.fillStyle = '#ffffff';
           ctx.fillText(this.data.text, canvas.width/2, canvas.height/2);
 
-          // إعادة الوضع الطبيعي
           ctx.globalCompositeOperation = 'source-over';
-
           texture.needsUpdate = true;
         });
       }
     });
 
-    // 3. البيانات وتعديل الـ Offset للتحكم الحر
+    // ==========================================
+    // تم إضافة (minDist) للتقريب و (maxDist) للابتعاد لكل موديل حسب حجمه
+    // ==========================================
     const siteData = [
       { 
         id: 'scene-welcome', title: '', desc: '', images: '', panelPosition: 'none', 
-        camRadius: 40, camHeight: 15, offsetX: 0
+        camRadius: 40, camHeight: 15, offsetX: 0,
+        minDist: 5, maxDist: 150 // أبعاد شاشة البداية
       },
       { 
         id: 'model_jamarat', 
         title: 'منشأة الجمرات',
-        desc: 'تُعد منشأة الجمرات الموقع الذي تُؤدى فيه شعيرة رمي الجمرات الثلاث (الصغرى، والوسطى، والعقبة) بالحصى. صُمم هذا الصرح المعماري بخمسة طوابق ومسارات ذكية باتجاه واحد، لاستيعاب مئات الآلاف من الحجاج في الساعة الواحدة وتأمين حركتهم دون تكدس هنا قلب مشعر منى حيث تتم إدارة وتفويج الحشود الهائلة عبر مسارات دخول وخروج لا تتقاطع.',
+        desc: 'تُعد منشأة الجمرات الموقع الذي تُؤدى فيه شعيرة رمي الجمرات الثلاث (الصغرى، والوسطى، والعقبة) بالحصى. صُمم هذا الصرح المعماري بخمسة طوابق ومسارات ذكية باتجاه واحد، لاستيعاب مئات الآلاف من الحجاج في الساعة الواحدة وتأمين حركتهم دون تكدس. هنا قلب مشعر منى حيث تتم إدارة وتفويج الحشود الهائلة عبر مسارات دخول وخروج لا تتقاطع.',
         images: 'https://vid.alarabiya.net/images/2022/07/09/6306caa4-ea67-4b15-b748-44d5540cf7ec/6306caa4-ea67-4b15-b748-44d5540cf7ec.jpg?crop=4:3&width=1200,https://pbs.twimg.com/media/HJTiNr5WcAAl8z4?format=webp&name=large,https://mubasher.news/wp-content/uploads/3-753.jpg,https://cp.slaati.com//wp-content/uploads/2018/08/7ec71df0-a2dd-4039-82fb-68c573b6b664.jpeg',
-        camRadius: 50, camHeight: 25, panelPosition: 'right', offsetX: 0 
+        camRadius: 50, camHeight: 25, panelPosition: 'right', offsetX: 0 ,
+        minDist: 50, maxDist: 600 // المجسم كبير، نسمح بالابتعاد لمسافة 400
       },
       { 
         id: 'model_khimaa', 
         title: 'مخيمات منى',
-        desc: 'تُعرف منى بـ مدينة الخيام وهي أكبر مدينة خيام في العالم. يغطي الوادي خيام مطورة مصنوعة من الألياف الزجاجية المقاومة للحريق (التفلون)، ومزودة بأنظمة تكييف متطورة، لضمان أعلى معايير السلامة والراحة لملايين الحجاج أثناء إقامتهم.',
+        desc: 'تُعرف منى بـ "مدينة الخيام" وهي أكبر مدينة خيام في العالم. يغطي الوادي خيام مطورة مصنوعة من الألياف الزجاجية المقاومة للحريق (التفلون)، ومزودة بأنظمة تكييف متطورة، لضمان أعلى معايير السلامة والراحة لملايين الحجاج أثناء إقامتهم في أيام التشريق.',
         images: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUUvqndurt7_k0op_AP_8Bn3ztxms1D3Ao4nJqWntuck9wWLKQKNgz9tE&s=10,https://media.almashhad.com/twitter/1687144283906_DHBmm.webp,https://img.youm7.com/ArticleImgs/2017/8/29/53467-%D9%85%D8%AE%D9%8A%D9%85%D8%A7%D8%AA-%D9%85%D9%86%D9%89.jpg,https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZFXJxeM2TYDudOUYIyEUasHvYV2ruH93LONqowv_IAgWHb8taft84H1s&s=10',
-        camRadius: 40, camHeight: 20, panelPosition: 'right', offsetX: -40 
+        camRadius: 40, camHeight: 20, panelPosition: 'left', offsetX: 0 ,
+        minDist: 50, maxDist: 150 // مسافة متوسطة
       },
       { 
         id: 'model_mgazer', 
         title: 'مجازر المعيصم',
-        desc: 'مشروع المملكة للإفادة من الهدي والأضاحي بالمعيصم، يمثل منظومة متكاملة لخدمة ضيوف الرحمن وتقديم الأضاحي وفق أعلى المعايير الصحية والتنظيمية.',
-        images: '', 
-        camRadius: 50, camHeight: 20, panelPosition: 'right', offsetX: 0 
+        desc: 'مشروع المملكة للإفادة من الهدي والأضاحي بالمعيصم، يمثل منظومة متكاملة لخدمة ضيوف الرحمن. وقد أنشأت المملكة هذا المشروع في عام 1983م للتسهيل على الحاج والمعتمر وللاستفادة من لحوم الهدي وتوزيعها على المستحقين في جميع أنحاء العالم. يهدف المشروع إلى توفير الشروط الشرعية والصحية في الأنعام، حيث تم تزويد المجازر بأحدث التقنيات وأكبر البرادات ذات القدرة الاستيعابية العالية لمواكبة أعداد الحجاج المتزايدة.',
+        images: 'https://portalcdn.spa.gov.sa/backend/original/202207/7c91bd15ebb36434752dac70c6025b52.jpeg,https://scontent.fjed4-3.fna.fbcdn.net/v/t39.30808-6/494094824_4178023322427379_4896834155243767584_n.jpg?stp=dst-jpg_tt6&cstp=mx1048x764&ctp=s1048x764&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=0b6b33&_nc_ohc=ii3i33Xo4joQ7kNvwFYPWwD&_nc_oc=AdrfezmSDq7PzP5dO21--iZCgmT35jdR0M0FzBQ0R4qpdrKF0nodlDa-fpHD_YZTpau3Q_Ai5deo2acsurZa3d9J&_nc_zt=23&_nc_ht=scontent.fjed4-3.fna&_nc_gid=PrYqqAUofDLjwI9l71i9Cg&_nc_ss=7b289&oh=00_AQNn7YOXN2NzOJu3s0TqDrjWy5btRRMyVL-MWI2WwJ_Kgw&oe=6AD503A8,https://scontent.fjed4-6.fna.fbcdn.net/v/t39.30808-6/493940024_4178022312427480_2452401886539528638_n.jpg?stp=dst-jpg_tt6&cstp=mx1043x761&ctp=s1043x761&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=0b6b33&_nc_ohc=k9RAV5maAUkQ7kNvwGYLRiq&_nc_oc=Adock9Q9gAPT29COWG7ehIYRwbNyyV-3sansODj96bkmhlHEShDdXeDBD5Xf045fW3wcLZe3j4i2uWxI5mbphn5O&_nc_zt=23&_nc_ht=scontent.fjed4-6.fna&_nc_gid=f5hE25Gs4LyBueuf6YGu3g&_nc_ss=7b289&oh=00_AQPzdPsINhEV-TovxoeXFfyPj-8m2_OjS1aaElfoEeA3Kw&oe=6AD50337,https://scontent.fjed4-1.fna.fbcdn.net/v/t39.30808-6/494181705_4178023579094020_6277602896163859192_n.jpg?stp=dst-jpg_tt6&cstp=mx1047x759&ctp=s1047x759&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=0b6b33&_nc_ohc=vCYyxJRVMB8Q7kNvwGbaIqb&_nc_oc=AdojQz8_uZfxMhJIJ4vdWNZxAWNvWPzQt2yoZeJEjQ05YQKng61MjwXo0e8JiCxQFRxehRMWzxzaHZfxB6d09l3u&_nc_zt=23&_nc_ht=scontent.fjed4-1.fna&_nc_gid=rkKuIQQI2qG0R5I7vsA2qQ&_nc_ss=7b289&oh=00_AQNnaxGeFIb59oXkvMzupeR_pCMIc_ugQ5ZUhWyb6FNxaA&oe=6AD4FEC0', 
+        camRadius: 100, camHeight: 50, panelPosition: 'right', offsetX: 0,
+        minDist: 150, maxDist: 600 // مساحة المجازر عملاقة، تحتاج رجوع للخلف بمسافة 600 لتظهر كاملة
       },
       { 
         id: 'model_albiaa', 
         title: 'مسجد البيعة',
-        desc: 'مسجد البيعة التاريخي، يقع في وادي منى ويحمل ذكرى بيعة العقبة الأولى والثانية التي كانت نقطة تحول كبرى في التاريخ الإسلامي.',
-        images: '', 
-        camRadius: 40, camHeight: 15, panelPosition: 'left', offsetX: 0 
+        desc: 'يعد مسجد البيعة، والذي بناه أبو جعفر المنصور سنة 144هـ، من أهم المعالم التاريخية في وادي منى. يقع المسجد في المكان الذي تمت فيه بيعة العقبة الأولى والثانية بين النبي محمد (صلى الله عليه وسلم) والأنصار، والتي كانت نقطة تحول كبرى وانطلاقاً للدعوة وتأسيساً لهجرة النبي وصحبه إلى المدينة المنورة. يحتفظ المسجد بطابعه المعماري الأثري، وهو مكون من ساحة مكشوفة تتقدمها مظلة.',
+        images: 'https://instagram.fjed4-6.fna.fbcdn.net/v/t39.30808-6/666901884_1391388786348317_2808695413816104847_n.jpg?stp=c0.0.767.574a_dst-jpg_e35_tt6&_nc_cat=101&_nc_map=urlgen_bucketless&ig_cache_key=Mzg3MTUwMjY2ODk3MjA5NjQwMg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuNzY4LnNkci5yZWd1bGFyX3Bob3RvLkMzIn0%3D&_nc_ohc=OUH7xQ6Xg_EQ7kNvwGTelba&_nc_oc=AdoN-AKHCObsbciTS5wKnqnr25VMir71qRYfJ3hHs2PABnKTy3580PjIAUoOVzFMpzh2SM4yHPhL-LxghDGRYshW&_nc_zt=23&_nc_ht=instagram.fjed4-6.fna&_nc_gid=_GzvWKhpEYd_v_n-IyGYsA&_nc_ss=78689&oh=00_AQOuqlZy-e47uRCjg8l_8oQMOkYhrNzOZiIzWypTHJ9zUA&oe=6AD4FED4,https://upload.wikimedia.org/wikipedia/commons/7/77/%D9%85%D8%B3%D8%AC%D8%AF_%D8%A7%D9%84%D8%A8%D9%8A%D8%B9%D8%A9_-_%D9%85%D9%83%D8%A9_%D8%A7%D9%84%D9%85%D9%83%D8%B1%D9%85%D8%A9.png?utm_source=ar.wikipedia.org&utm_campaign=index&utm_content=original,https://instagram.fjed4-1.fna.fbcdn.net/v/t39.30808-6/669716744_1391388793014983_2516283704761746151_n.jpg?stp=c0.0.887.664a_dst-jpg_e35_tt6&_nc_cat=101&_nc_map=urlgen_bucketless&ig_cache_key=Mzg3MTUwMjY2OTUzNDA4NjM2Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuODg4LnNkci5yZWd1bGFyX3Bob3RvLkMzIn0%3D&_nc_ohc=VRqv6kbYa38Q7kNvwHN3VWu&_nc_oc=AdrLPjOJsY6zGAJXq7pP_LiShZIkhAVOlw4rZNq20Fv9EavJNdUgmHMCV9xEo-K9OYu6IUdqSgXCB6dFwVFEjhGf&_nc_zt=23&_nc_ht=instagram.fjed4-1.fna&_nc_gid=_GzvWKhpEYd_v_n-IyGYsA&_nc_ss=78689&oh=00_AQOToTvUcNe7_kb6_jadGCEre_Yoctnkrw3qI95pmwaXrw&oe=6AD526FC,https://www.discovermakkah.sa/getContentAsset/c5a09863-39d3-46b9-b683-91f878401856/cc721195-df8f-4799-b974-5ade63036cab/Al-Bay-ah-Mosque-(2).webp?language=ar', 
+        camRadius: 60, camHeight: 30, panelPosition: 'left', offsetX: 0, offsetY: 30,
+        minDist: 120, maxDist: 1500 // المسجد صغير، نضع حد أقصى للابتعاد 120 حتى لا يختفي
       },
       { 
         id: 'model_alkhif', 
         title: 'مسجد الخيف',
-        desc: 'مسجد الخيف بمنى، يسمى بمسجد الأنبياء حيث صلى فيه رسول الله صلى الله عليه وسلم والأنبياء من قبله، ويعتبر من أبرز معالم المشاعر المقدسة.',
-        images: '', 
-        camRadius: 45, camHeight: 20, panelPosition: 'right', offsetX: 0 
+        desc: 'يُعرف مسجد الخيف بمنى بـ "مسجد الأنبياء"، حيث تشير الروايات إلى أن سبعين نبياً قد صلوا فيه، من بينهم النبي موسى والنبي محمد (عليهم الصلاة والسلام). يقع المسجد على سفح جبل المشعر، وقد استمد اسمه "الخيف" من موقعه المرتفع عن مجرى السيل. يتميز بعمارته الإسلامية الواسعة ويعد محطة إيمانية بارزة للحجاج خلال أيام التشريق.',
+        images: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-I1nzPOasZO5a5GKVKp2klpFenSXwilAcaAZILRRqpNeO-BkucpQQ2irj&s=10,https://www.qpedia.org/uploads/topics/5251201503.jpg,https://www.alriyadh.com/media/article/2022/06/15/img/8972860010.jpg,https://pn-site-storage.fra1.cdn.digitaloceanspaces.com/PN-SITE-2-WP/uploads/2023/01/2022-07-24.jpg', 
+        camRadius: 100, camHeight: 40, panelPosition: 'right', offsetX: 0, offsetY: 30,
+        minDist: 5, maxDist: 250 // المسجد متوسط الحجم
       }
     ];
 
@@ -276,7 +328,6 @@
         screen.style.display = 'none'; 
         document.querySelector('.nav-arrows-container').style.visibility = 'visible';
         
-        // إظهار أزرار A-Frame الأصلية (VR / Fullscreen)
         let vrBtn = document.querySelector('.a-enter-vr');
         if(vrBtn) vrBtn.style.display = 'block';
 
@@ -284,7 +335,6 @@
       }, 800);
     }
 
-    // إخفاء الأزرار الافتراضية قبل الضغط على Play
     document.addEventListener("DOMContentLoaded", () => {
       let checkVR = setInterval(() => {
         let vrBtn = document.querySelector('.a-enter-vr');
@@ -324,16 +374,32 @@
 
         if(currentIndex === 0) {
           document.getElementById('scene-welcome').setAttribute('visible', 'true');
-          orbit.target.set(0, 10, 0);
           cameraEl.setAttribute('position', `0 ${data.camHeight} ${data.camRadius}`);
+          orbit.target.set(0, 10, 0);
+          
+          // تحديث إعدادات الزوم لشاشة الترحيب
+          cameraEl.setAttribute('orbit-controls', 'minDistance', data.minDist || 5);
+          cameraEl.setAttribute('orbit-controls', 'maxDistance', data.maxDist || 400);
+          
         } else {
           let currentModelEl = document.getElementById(data.id);
           if(currentModelEl) {
             currentModelEl.setAttribute('visible', 'true');
-            currentModelEl.setAttribute('position', `${data.offsetX} 10 0`);
             
-            orbit.target.set(0, 10, 0);
+            let currentOffsetY = data.offsetY || 10;
+            currentModelEl.setAttribute('position', `${data.offsetX} ${currentOffsetY} 0`);
+            
+            // إعادة تعيين الكاميرا للموقع الخاص بالموديل
             cameraEl.setAttribute('position', `0 ${data.camHeight} ${data.camRadius}`);
+            orbit.target.set(data.offsetX, currentOffsetY, 0);
+            
+            // ==========================================
+            // تحديث إعدادات الزوم تلقائياً حسب حجم الموديل
+            // ==========================================
+            cameraEl.setAttribute('orbit-controls', 'minDistance', data.minDist || 5);
+            cameraEl.setAttribute('orbit-controls', 'maxDistance', data.maxDist || 400);
+            
+            orbit.update();
           }
         }
 
@@ -411,7 +477,6 @@
         <img src="https://image2url.com/r2/default/images/1773558610625-b250b6cd-d224-421f-b749-0894a9cf0602.png" alt="يوروكونسلت">
       </div>
 
-      <!-- أسهم التنقل مطابقة للاتجاهات المطلوبة -->
       <div class="nav-arrows-container">
         <div class="nav-arrow" onclick="goToRight()" title="التالي">&#10094;</div> 
         <div class="nav-text">مرر لرؤية المعالم</div>
@@ -429,29 +494,20 @@
         </div>
       </div>
 
-      <!-- تفعيل A-Frame وأزراره الافتراضية للـ VR والتكبير -->
       <a-scene embedded antialias="true" renderer="logarithmicDepthBuffer: true; colorManagement: true;" vr-mode-ui="enabled: true">
         
-        <!-- ============================================== -->
-        <!-- منطقة الأصول (Assets) المحدثة بروابط GitHub -->
-        <!-- ============================================== -->
-        <!-- ============================================== -->
-        <!-- منطقة الأصول (Assets) المحدثة بالكامل من GitHub -->
-        <!-- ============================================== -->
         <a-assets timeout="120000">
-          <!-- النماذج المرفوعة في المستودع الرئيسي (مسار نسبي مباشر) -->
-          <a-asset-item id="model-jamarat" src="jamaraat.glb" crossorigin="anonymous"></a-asset-item>
-          <a-asset-item id="model-khimaa" src="KHIMAA.glb" crossorigin="anonymous"></a-asset-item>
-          
-          <!-- النماذج المرفوعة في GitHub Releases (لأن حجمها تجاوز حد المستودع العادي) -->
-          <a-asset-item id="model-mgazer" src="https://github.com/euroconsult119-lab/VR/releases/download/v1.0/Mgazer.glb" crossorigin="anonymous"></a-asset-item>
-          <a-asset-item id="model-albiaa" src="https://github.com/euroconsult119-lab/VR/releases/download/v1.0/Masjed.Albiaa.glb" crossorigin="anonymous"></a-asset-item>
-          <a-asset-item id="model-alkhif" src="https://github.com/euroconsult119-lab/VR/releases/download/v1.0/Alkhif.Masjed.glb" crossorigin="anonymous"></a-asset-item>
+          <a-asset-item id="model-jamarat" src="https://drofkqnzcoxpqzacuemk.supabase.co/storage/v1/object/public/vr-models/jamaraat.glb" crossorigin="anonymous"></a-asset-item>
+          <a-asset-item id="model-khimaa" src="https://drofkqnzcoxpqzacuemk.supabase.co/storage/v1/object/public/vr-models/KHIMAA.glb" crossorigin="anonymous"></a-asset-item>
+          <a-asset-item id="model-mgazer" src="https://drofkqnzcoxpqzacuemk.supabase.co/storage/v1/object/public/vr-models/Mgazer.glb" crossorigin="anonymous"></a-asset-item>
+          <a-asset-item id="model-albiaa" src="https://drofkqnzcoxpqzacuemk.supabase.co/storage/v1/object/public/vr-models/Masjed%20Albiaa.glb" crossorigin="anonymous"></a-asset-item>
+          <a-asset-item id="model-alkhif" src="https://drofkqnzcoxpqzacuemk.supabase.co/storage/v1/object/public/vr-models/Alkhif%20Masjed.glb" crossorigin="anonymous"></a-asset-item>
         </a-assets>
-        <!-- ============================================== -->
-        <!-- ============================================== -->
 
-        <a-sky color="#02050d"></a-sky>
+        <a-entity gradient-sky></a-entity>
+        
+        <a-entity star-system></a-entity>
+
         <a-plane position="0 -5 0" rotation="-90 0 0" width="4000" height="4000" neon-grid></a-plane>
 
         <a-light type="ambient" color="#051535" intensity="2.5"></a-light>
@@ -461,42 +517,40 @@
 
         <a-entity id="models-group">
           
-          <!-- الجملة الترحيبية: في سطر واحد ضخم بعرض 140 -->
           <a-entity id="scene-welcome" position="0 0 0" visible="true">
             <a-entity hollow-neon-text="text: حياكم في معالم مشعر منى; color: #00d2ff; size: 140; width: 140; height: 18" 
                       position="0 15 0" 
                       animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 16 0"></a-entity>
             
-            <!-- الأسهم الترحيبية: تتجه لليمين بشكل صحيح -->
-            <a-entity hollow-neon-text="text: >>>>>>>>>>; color: #00d2ff; size: 100; width: 50; height: 12" 
-                      position="-5 8 0" 
-                      animation="property: position; to: 5 8 0; dur: 2500; easing: linear; loop: true;"></a-entity>
+            <a-entity hollow-neon-text="text: >>>>>>>>>>>>>>; color: #00d2ff; size: 100; width: 150; height: 12" 
+                      position="5 8 0" 
+                      animation="property: position; to: -5 8 0; dur: 2500; easing: linear; loop: true;"></a-entity>
           </a-entity>
 
           <a-entity id="model_jamarat" class="scene-model" position="0 10 0" visible="false">
             <a-gltf-model src="#model-jamarat" scale="0.05 0.05 0.05"></a-gltf-model>
           </a-entity>
 
-          <a-entity id="model_khimaa" class="scene-model" position="-40 10 0" visible="false">
+          <a-entity id="model_khimaa" class="scene-model" position="0 1 0" rotation="0 60 0" visible="false">
             <a-gltf-model src="#model-khimaa" scale="5 5 5"></a-gltf-model>
           </a-entity>
 
-          <a-entity id="model_mgazer" class="scene-model" position="0 10 0" visible="false">
-            <a-gltf-model src="#model-mgazer" scale="1 1 1"></a-gltf-model>
+          <a-entity id="model_mgazer" class="scene-model" position="0 0 0" rotation="0 -40 0" visible="false">
+            <a-gltf-model src="#model-mgazer" scale="100 100 100"></a-gltf-model>
           </a-entity>
 
-          <a-entity id="model_albiaa" class="scene-model" position="0 10 0" visible="false">
-            <a-gltf-model src="#model-albiaa" scale="1 1 1"></a-gltf-model>
+          <a-entity id="model_albiaa" class="scene-model" position="0 30 0" rotation="0 -50 0" visible="false">
+            <a-gltf-model src="#model-albiaa" scale="100 100 100"></a-gltf-model>
           </a-entity>
 
-          <a-entity id="model_alkhif" class="scene-model" position="0 10 0" visible="false">
-            <a-gltf-model src="#model-alkhif" scale="1 1 1"></a-gltf-model>
+          <a-entity id="model_alkhif" class="scene-model" position="0 30 0" rotation="0 60 0" visible="false">
+            <a-gltf-model src="#model-alkhif" scale="100 100 100"></a-gltf-model>
           </a-entity>
 
         </a-entity>
 
         <a-entity camera="near: 0.1; far: 10000" look-controls="enabled: false" 
-                  orbit-controls="target: 0 10 0; minDistance: 5; maxDistance: 150; initialPosition: 0 15 40; 
+                  orbit-controls="target: 0 10 0; minDistance: 5; maxDistance: 400; initialPosition: 0 15 40; 
                                   enablePan: true; enableZoom: true; enableDamping: true; dampingFactor: 0.05; rotateSpeed: 0.5;">
         </a-entity>
         
